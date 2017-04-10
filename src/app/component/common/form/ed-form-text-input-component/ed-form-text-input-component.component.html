@@ -1,0 +1,12 @@
+<div class="form-group">
+  <label *ngIf="label!=false">{{attributeName}}</label>
+  <div>
+    <input type="text"
+           class="form-control"
+           name="{{attributeName}}"
+           [ngModel]="resource.getProperty(attributeName).getValue()"
+            (ngModelChange)="resource.getProperty(attributeName).setValue($event)"
+           />
+  </div>
+</div>
+

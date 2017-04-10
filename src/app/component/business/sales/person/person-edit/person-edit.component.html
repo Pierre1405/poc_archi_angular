@@ -1,0 +1,86 @@
+<ed-page>
+  <ed-page-title>
+    Edit person
+    <button class="btn btn-primary" (click)="save()">Save</button>
+  </ed-page-title>
+  <ed-page-content>
+
+    <h4>
+      Hello {{person.getProperty("PerTitle").getValue()}} {{person.getProperty("PerFstName").getValue()}} {{person.getProperty("PerName").getValue()}} !!!!<br/>
+
+    </h4>
+
+    <ed-column-container>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerTitle'" [resource]="person"></ed-form-text-input>
+      </ed-container-item>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerFstName'" [resource]="person"></ed-form-text-input>
+      </ed-container-item>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerName'" [resource]="person"></ed-form-text-input>
+      </ed-container-item>
+    </ed-column-container>
+
+    <h4>
+      Your best friend is
+        {{person.getResource('PerBestFriend').getProperty("PerTitle").getValue()}}
+        {{person.getResource('PerBestFriend').getProperty("PerFstName").getValue()}}
+        {{person.getResource('PerBestFriend').getProperty("PerName").getValue()}} !!!!<br/>
+    </h4>
+
+    <ed-column-container>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerTitle'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+      </ed-container-item>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerFstName'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+      </ed-container-item>
+      <ed-container-item>
+        <ed-form-text-input [name]="'PerName'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+      </ed-container-item>
+    </ed-column-container>
+
+    <h4>
+      But you have also some others friends!!!
+    </h4>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>
+          </th>
+          <th>
+            Title
+          </th>
+          <th>
+            First name
+          </th>
+          <th>
+            Name
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let onePerson of person.getCollectionResource('PerOthersFriends').getResources()">
+          <td>
+            {{onePerson.getProperty("PerTitle").getValue()}}
+            {{onePerson.getProperty("PerFstName").getValue()}}
+            {{onePerson.getProperty("PerName").getValue()}}
+          </td>
+          <td>
+            <ed-form-text-input [name]="'PerTitle'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+          </td>
+          <td>
+            <ed-form-text-input [name]="'PerFstName'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+          </td>
+          <td>
+            <ed-form-text-input [name]="'PerName'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <pre>{{ person.toNonCircularObjectForJSON() | json}}</pre>
+
+  </ed-page-content>
+</ed-page>
