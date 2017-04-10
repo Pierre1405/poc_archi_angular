@@ -1,18 +1,33 @@
 
 
-import {EdIStore, EdStoreUtils} from "../store.interface";
+import {EdIStore} from "../store.interface";
 import {EdICollectionRessource, EdIObjectResource} from "../../ressource/ressource.interface";
-import {Observable, Observer} from "rxjs/Rx";
+import {Observable} from "rxjs/Rx";
 import {DataDictionnary, FieldType, ObjectDef} from "../../ressource/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
-import {empty} from "rxjs/Observer";
 import {EdUnknownCollectionResource, EdUnknownObjectResource} from "../../ressource/ressource.impl";
+import {EdStoreUtils} from "../store.utils";
 
 export class EdIndexedDBStore implements EdIStore {
 
   private openConnectionRequest$: Observable<IDBDatabase> = Observable.create();
   private db: IDBDatabase = null;
+
+  private static parseID(id: string) {
+    return parseInt(id, 10);
+  }
+
+  private static createLocalDB(db: IDBDatabase) {
+    const instance = DataDictionnary.getInstance();
+    for (const objectName in instance.getObjectDefinitions()) {
+      if (instance.getObjectDefinitions().hasOwnProperty(objectName)) {
+        const objectDef = instance.getObjectDefinitions()[objectName];
+        db.createObjectStore(objectDef.objectName, {keyPath: objectDef.radical + "ID", autoIncrement: true});
+      }
+    }
+  }
+
   constructor () {
     this.openDbConnection().subscribe(
       function (db) {
@@ -41,16 +56,6 @@ export class EdIndexedDBStore implements EdIStore {
       }.bind(this);
     }.bind(this));
     return this.openConnectionRequest$;
-  }
-
-  private createLocalDB(db: IDBDatabase) {
-    const instance = DataDictionnary.getInstance();
-    for (const objectName in instance.getObjectDefinitions()) {
-      if (instance.getObjectDefinitions().hasOwnProperty(objectName)) {
-        const objectDef = instance.getObjectDefinitions()[objectName];
-        db.createObjectStore(objectDef.objectName, {keyPath: objectDef.radical + "ID", autoIncrement: true});
-      }
-    }
   }
 
   readResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
@@ -87,7 +92,6 @@ export class EdIndexedDBStore implements EdIStore {
         if (fieldDef.type !== FieldType.RESOURCE) {
           resource.setProperty(fieldName, dbValue ? dbValue : null);
         } else {
-          const objectName = (<ObjectDef> fieldDef.objectDef).objectName;
           if (fieldDef.isMultival) {
             const newCollection: EdUnknownCollectionResource = new EdUnknownCollectionResource(this, fieldDef, resource.getID());
             resource.createCollectionResource(fieldName, newCollection);
@@ -103,15 +107,11 @@ export class EdIndexedDBStore implements EdIStore {
     resource.setIsRead(true);
   }
 
-  private parseID(id: string) {
-    return parseInt(id, 10);
-  }
-
   readCollection(resource: EdICollectionRessource,
                  filter: {[fieldName: string]: any},
                  order: any,
                  pagination: any): Observable<EdICollectionRessource> {
-    const observable$ = Observable.create(function (observer) {
+    return Observable.create(function (observer) {
       this.openConnectionRequest$.subscribe(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
         const transaction = db.transaction(objectName);
@@ -139,11 +139,10 @@ export class EdIndexedDBStore implements EdIStore {
 
       }.bind(this));
     }.bind(this));
-    return observable$;
   }
 
   saveResources(resources: (EdIObjectResource | EdICollectionRessource)[]): Observable<any> {
-    const observable$ = Observable.create(function (observer) {
+    return Observable.create(function (observer) {
       const allResource$: Observable<any>[] = [];
       for (const resource of resources) {
         if (resource.getMetaData().isMultival) {
@@ -156,11 +155,11 @@ export class EdIndexedDBStore implements EdIStore {
       }
       if (allResource$.length > 0) {
         const resources$ = Observable.merge.apply(Observable, allResource$);
-        resources$.subscribe(function() {
+        resources$.subscribe(function () {
           observer.next(arguments);
         }, function () {
           observer.error(arguments);
-        }, function(){
+        }, function () {
           observer.complete();
         }.bind(this));
       } else {
@@ -168,15 +167,14 @@ export class EdIndexedDBStore implements EdIStore {
       }
 
     }.bind(this));
-    return observable$;
   }
 
   private saveResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
-    const observable$: Observable<EdIObjectResource> = Observable.create(function(observer$) {
+    return Observable.create(function(observer$) {
       this.openConnectionRequest$.subscribe(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
         const transaction = db.transaction([objectName], "readwrite");
-        transaction.oncomplete = function (ev: Event) {
+        transaction.oncomplete = function () {
           observer$.complete();
         };
         transaction.onerror = function (ev) {
@@ -205,8 +203,6 @@ export class EdIndexedDBStore implements EdIStore {
         };
       }.bind(this));
     }.bind(this));
-
-    return observable$;
   }
 }
 
