@@ -91,14 +91,13 @@ export class DataDictionnary {
   public getObjectDefinition(objectName: string): ObjectDef {
     const result = this.getObjectDefinitions()[objectName];
     if (result == null) {
-      debugger;
       throw new SystemError("Object not found " + objectName, null, objectName);
     }
     return result;
   }
 
 
-  public getFieldDefinition(fieldName:string): FieldDef {
+  public getFieldDefinition(fieldName: string): FieldDef {
     const result = this._fieldDefinitions[fieldName];
     if (result == null) {
       throw new SystemError("Field not found " + fieldName, null, fieldName);
@@ -122,7 +121,7 @@ export interface ObjectDef {
 export interface FieldDef {
   type: FieldType;
   propertyName: string;
-  ownerObjectDef: (ObjectDef|string);
+  ownerObjectDef?: (ObjectDef|string);
   isMultival: boolean;
   nativeValidation?: any[];
   objectDef?: (ObjectDef|string);

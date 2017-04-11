@@ -2,8 +2,11 @@ import {async, ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/t
 
 import { EdFormTextInputComponent } from './ed-form-text-input-component.component';
 import {FormsModule} from "@angular/forms";
-import {EdRessourceFactory, EdUnknownObjectResource} from "../../../../services/dao/ressource/ressource.impl";
-import {DataDictionnary} from "../../../../services/dao/ressource/datadictionary.impl";
+import {
+  EdRessourceFactory, EdUnknownObjectResource,
+  EDUnknowPrimitiveRessource
+} from "../../../../services/dao/ressource/ressource.impl";
+import {DataDictionnary, FieldType} from "../../../../services/dao/ressource/datadictionary.impl";
 
 describe('EdFormTextInputComponent', () => {
   let component: EdFormTextInputComponent;
@@ -14,7 +17,7 @@ describe('EdFormTextInputComponent', () => {
       declarations: [
         EdFormTextInputComponent
       ],
-      imports:[
+      imports: [
         FormsModule
       ]
     })
@@ -24,7 +27,11 @@ describe('EdFormTextInputComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    component.resource = EdRessourceFactory.getInstance().getResource("Person", null);
+    component.resource = new EDUnknowPrimitiveRessource(null, {
+      type: FieldType.STRING,
+      isMultival: false,
+      propertyName: "PerName"
+    });
     fixture.detectChanges();
   });
 
@@ -35,28 +42,23 @@ describe('EdFormTextInputComponent', () => {
   it('should display property value', fakeAsync(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    const resource = new EdUnknownObjectResource(null, null, {
-        type: null,
-        propertyName: null,
-        ownerObjectDef: null,
-        objectDef: DataDictionnary.getInstance().getObjectDefinition("Person"),
-        isMultival: false
+    const resource = new EDUnknowPrimitiveRessource(null, {
+      type: FieldType.STRING,
+      isMultival: false,
+      propertyName: "PerName"
     });
-    resource.setProperty("PerName", "toto");
-
     component.resource = resource;
-    component.attributeName = "PerName";
+
+    const compiled = fixture.debugElement.nativeElement;
 
     fixture.detectChanges();
     tick();
-    const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector("input").value).toEqual("toto");
+    expect(compiled.querySelector("input").value).toEqual("");
 
-    /*
-     const fixture = TestBed.createComponent(AppComponent);
-     fixture.detectChanges();
-     const compiled = fixture.debugElement.nativeElement;
-     expect(compiled.querySelector('h1').textContent).toContain('app works!');
-     */
+    resource.setValue("Test Value");
+    fixture.detectChanges();
+    tick();
+    expect(compiled.querySelector("input").value).toEqual("Test Value");
+
   }));
 });
