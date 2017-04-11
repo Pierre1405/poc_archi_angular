@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {EdIObjectResource} from "../../../../services/dao/ressource/ressource.interface";
+import {EdIObjectResource, EdIPrimitiveRessource} from "../../../../services/dao/ressource/ressource.interface";
 
 @Component({
   selector: 'ed-form-text-input',
@@ -9,9 +9,7 @@ import {EdIObjectResource} from "../../../../services/dao/ressource/ressource.in
 })
 export class EdFormTextInputComponent implements OnInit {
 
-  @Input('name') attributeName: String;
-
-  @Input() resource: EdIObjectResource;
+  @Input() resource: EdIPrimitiveRessource;
 
   @Input() label: boolean|string;
 

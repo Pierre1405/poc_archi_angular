@@ -1,11 +1,10 @@
 <div class="form-group">
-  <label *ngIf="label!=false">{{attributeName}}</label>
+  <label *ngIf="label!=false">{{resource.getMetaData().propertyName}}</label>
   <div>
     <input type="text"
            class="form-control"
-           name="{{attributeName}}"
-           [ngModel]="resource.getProperty(attributeName).getValue()"
-            (ngModelChange)="resource.getProperty(attributeName).setValue($event)"
+           [ngModel]="resource.getValue()"
+            (ngModelChange)="resource.setValue($event)"
            />
   </div>
 </div>

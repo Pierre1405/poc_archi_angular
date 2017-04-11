@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { routes} from "./app.router";
 import {EdBusinessModule} from "./component/business/ed.business.module";
 import {EdCommonModule} from "./component/common/ed.common.module";
+import {RouterModule} from "@angular/router";
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import {EdCommonModule} from "./component/common/ed.common.module";
     HttpModule,
     EdBusinessModule,
     EdCommonModule,
+    RouterModule,
     routes,
     CommonModule
   ],

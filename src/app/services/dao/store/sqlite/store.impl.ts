@@ -68,7 +68,7 @@ export class EdIndexedDBStore implements EdIStore {
         const transaction = db.transaction(objectName);
         const objectStore = transaction.objectStore(objectName);
 
-        const idbRequest = objectStore.get(this.parseID(resource.getID()));
+        const idbRequest = objectStore.get(EdIndexedDBStore.parseID(resource.getID()));
         idbRequest.onerror = function (ev) {
           observable.error(ev);
         };
@@ -191,7 +191,7 @@ export class EdIndexedDBStore implements EdIStore {
         const newRecord = EdStoreUtils.instanceResourceToObject(resource);
         const objectRadical = (<ObjectDef> resource.getMetaData().objectDef).radical;
         if (resource.getID()) {
-          newRecord[objectRadical + "ID"] = this.parseID(newRecord[objectRadical + "ID"]);
+          newRecord[objectRadical + "ID"] = EdIndexedDBStore.parseID(newRecord[objectRadical + "ID"]);
           request = objectStore.put(newRecord);
         } else {
           delete newRecord[objectRadical + "ID"];

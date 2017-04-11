@@ -12,13 +12,13 @@
 
     <ed-column-container>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerTitle'" [resource]="person"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getProperty('PerTitle')"></ed-form-text-input>
       </ed-container-item>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerFstName'" [resource]="person"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getProperty('PerFstName')"></ed-form-text-input>
       </ed-container-item>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerName'" [resource]="person"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getProperty('PerName')"></ed-form-text-input>
       </ed-container-item>
     </ed-column-container>
 
@@ -31,13 +31,13 @@
 
     <ed-column-container>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerTitle'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getResource('PerBestFriend').getProperty('PerTitle')"></ed-form-text-input>
       </ed-container-item>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerFstName'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getResource('PerBestFriend').getProperty('PerFstName')"></ed-form-text-input>
       </ed-container-item>
       <ed-container-item>
-        <ed-form-text-input [name]="'PerName'" [resource]="person.getResource('PerBestFriend')"></ed-form-text-input>
+        <ed-form-text-input [resource]="person.getResource('PerBestFriend').getProperty('PerName')"></ed-form-text-input>
       </ed-container-item>
     </ed-column-container>
 
@@ -69,13 +69,13 @@
             {{onePerson.getProperty("PerName").getValue()}}
           </td>
           <td>
-            <ed-form-text-input [name]="'PerTitle'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+            <ed-form-text-input [resource]="onePerson.getProperty('PerTitle')" [label]="false"></ed-form-text-input>
           </td>
           <td>
-            <ed-form-text-input [name]="'PerFstName'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+            <ed-form-text-input [resource]="onePerson.getProperty('PerFstName')" [label]="false"></ed-form-text-input>
           </td>
           <td>
-            <ed-form-text-input [name]="'PerName'" [resource]="onePerson" [label]="false"></ed-form-text-input>
+            <ed-form-text-input [resource]="onePerson.getProperty('PerName')" [label]="false"></ed-form-text-input>
           </td>
         </tr>
       </tbody>

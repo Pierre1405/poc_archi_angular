@@ -76,11 +76,10 @@ export class EdUnknownObjectResource implements EdIObjectResource {
   }
 
   getProperty(field: string): EdIPrimitiveRessource {
-    if (this.attributes.hasOwnProperty(field)) {
-      return this.attributes[field];
-    } else {
-      return new EDUnknowPrimitiveRessource(null, null);
+    if (!this.attributes.hasOwnProperty(field)) {
+      this.attributes[field] = new EDUnknowPrimitiveRessource(null, DataDictionnary.getInstance().getFieldDefinition(field));
     }
+    return this.attributes[field];
   }
 
   setProperty(field: string, value: any) {
