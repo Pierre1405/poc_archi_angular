@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PersonEditComponent } from './person-edit.component';
+import {EdCommonModule} from "../../../../common/ed.common.module";
+import {ActivatedRoute} from "@angular/router";
+import {RouterTestingModule} from "@angular/router/testing";
 
 describe('PersonEditComponent', () => {
   let component: PersonEditComponent;
@@ -8,10 +11,17 @@ describe('PersonEditComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonEditComponent ]
+      declarations: [
+        PersonEditComponent,
+      ],
+      imports:[
+        EdCommonModule,
+        RouterTestingModule
+      ]
     })
     .compileComponents();
   }));
+
 
   beforeEach(() => {
     fixture = TestBed.createComponent(PersonEditComponent);
