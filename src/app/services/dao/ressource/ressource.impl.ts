@@ -2,12 +2,12 @@
 
 import {Observable} from "rxjs/Observable";
 import {
-  EdICollectionRessource, EdIObjectResource, EdIPrimitiveRessource, EdIRessource
+  EdICollectionRessource, EdIObjectResource, EdIPrimitiveRessource
 } from "./ressource.interface";
 import {EdIStore} from "../store/store.interface";
 import {Injectable} from "@angular/core";
 import {DataDictionnary, FieldDef, FieldType, ObjectDef} from "./datadictionary.impl";
-import {EdIndexedDBStore} from "../store/sqlite/store.impl";
+import {EdIndexedDBStore} from "../store/indexeddb/store.impl";
 
 export class EdRessourceFactory {
 
@@ -53,7 +53,7 @@ export class EdUnknownObjectResource implements EdIObjectResource {
   }
 
   public read(id?: string): Observable<EdIObjectResource> {
-    if(id) {
+    if (id) {
       this.setID(id);
     }
     const observable = this.store.readResource(this);
@@ -136,7 +136,9 @@ export class EdUnknownObjectResource implements EdIObjectResource {
 
   getCollectionResource(fieldName: string): EdICollectionRessource {
     if (!this.attributes.hasOwnProperty(fieldName)) {
-      this.attributes[fieldName] = new EdUnknownCollectionResource(this.store, DataDictionnary.getInstance().getFieldDefinition(fieldName), this.getID());
+      this.attributes[fieldName] = new EdUnknownCollectionResource(
+        this.store, DataDictionnary.getInstance().getFieldDefinition(fieldName),
+        this.getID());
     }
     return this.attributes[fieldName];
   }
@@ -173,8 +175,7 @@ export class EdUnknownCollectionResource implements EdICollectionRessource {
     if (this.ownerObjectID && this.getMetaData().propertyName) {
       filter[this.getMetaData().propertyName] = this.ownerObjectID;
     }
-    const observable = this.store.readCollection(this, filter, null, null);
-    return observable;
+    return this.store.readCollection(this, filter, null, null);
   }
 
   isRead(): boolean {
@@ -220,6 +221,7 @@ export class EdUnknownCollectionResource implements EdICollectionRessource {
 
 export class EDUnknowPrimitiveRessource implements EdIPrimitiveRessource {
 
+  // TODO: metadata should be settable with fieldName
   constructor (private value: any, private metadata: FieldDef) {
 
   }
@@ -264,15 +266,17 @@ class EdResourceUtils {
     if (resource.isRead()) {
       const fieldDefs = (<ObjectDef> resource.getMetaData().objectDef).fields;
       for ( const fieldName in fieldDefs) {
-        const fieldDef = fieldDefs[fieldName];
-        if (fieldDef.type !== FieldType.RESOURCE) {
-          const property = resource.getProperty(fieldName);
-          result[fieldName] = property.getValue();
-        } else {
-          if (fieldDef.isMultival) {
-            result[fieldName] = EdResourceUtils.getNonCircularCollectionForJson(resource.getCollectionResource(fieldName));
+        if (fieldDefs.hasOwnProperty(fieldName)) {
+          const fieldDef = fieldDefs[fieldName];
+          if (fieldDef.type !== FieldType.RESOURCE) {
+            const property = resource.getProperty(fieldName);
+            result[fieldName] = property.getValue();
           } else {
-            result[fieldName] = EdResourceUtils.getNonCircularResourceForJson(resource.getResource(fieldName));
+            if (fieldDef.isMultival) {
+              result[fieldName] = EdResourceUtils.getNonCircularCollectionForJson(resource.getCollectionResource(fieldName));
+            } else {
+              result[fieldName] = EdResourceUtils.getNonCircularResourceForJson(resource.getResource(fieldName));
+            }
           }
         }
       }
@@ -281,7 +285,7 @@ class EdResourceUtils {
   }
 
   private static getNonCircularCollectionForJson(collectionResource: EdICollectionRessource): Array<any> {
-    const result: Array<any> = new Array();
+    const result: Array<any> = [];
     for (const resource of collectionResource.getResources()) {
       result.push(EdResourceUtils.getNonCircularResourceForJson(resource));
     }

@@ -28,7 +28,8 @@ export class EdIndexedDBStore implements EdIStore {
     }
   }
 
-  constructor () {
+  constructor (private dbName?: string) {
+    this.dbName = this.dbName? this.dbName: "localData";
     this.openDbConnection().subscribe(
       function (db) {
         console.log("Connected to local base", db);
@@ -43,7 +44,7 @@ export class EdIndexedDBStore implements EdIStore {
 
   private openDbConnection(): Observable<IDBDatabase> {
     this.openConnectionRequest$ = Observable.create(function (observable) {
-      const openRequest = window.indexedDB.open("localData", 1);
+      const openRequest = window.indexedDB.open(this.dbName, 1);
       openRequest.onsuccess = function (ev: Event) {
         observable.next(<IDBDatabase>(<any>ev.target).result);
       };
@@ -52,7 +53,7 @@ export class EdIndexedDBStore implements EdIStore {
       };
       openRequest.onupgradeneeded = function (ev: IDBVersionChangeEvent) {
         const db: IDBDatabase = (<any>ev.target).result;
-        this.createLocalDB(db);
+        EdIndexedDBStore.createLocalDB(db);
       }.bind(this);
     }.bind(this));
     return this.openConnectionRequest$;
