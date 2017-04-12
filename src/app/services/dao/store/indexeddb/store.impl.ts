@@ -51,12 +51,40 @@ export class EdIndexedDBStore implements EdIStore {
       openRequest.onerror = function (ev: Event) {
         observable.error(new SystemError("Not able to open DB", null, ev));
       };
+      openRequest.onblocked = function (ev: Event) {
+        observable.error(new SystemError("Not able to open DB, a connection is already opened", null, ev));
+      };
       openRequest.onupgradeneeded = function (ev: IDBVersionChangeEvent) {
         const db: IDBDatabase = (<any>ev.target).result;
         EdIndexedDBStore.createLocalDB(db);
       }.bind(this);
     }.bind(this));
     return this.openConnectionRequest$;
+  }
+
+  public closeDbConnection() {
+    this.db.close();
+  }
+
+
+  public deleteDb() {
+    return Observable.create(function (observer) {
+      this.closeDbConnection();
+      this.db = null;
+      this.openConnectionRequest$ = null;
+      const deleteDatabaseRequest = window.indexedDB.deleteDatabase("unitTest");
+      deleteDatabaseRequest.onsuccess = function() {
+        observer.next();
+        observer.complete();
+      };
+      deleteDatabaseRequest.onerror = function() {
+        observer.error(arguments);
+      };
+      deleteDatabaseRequest.onblocked = function() {
+        observer.error(arguments);
+      };
+    }.bind(this));
+
   }
 
   readResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
@@ -208,9 +236,9 @@ export class EdIndexedDBStore implements EdIStore {
   }
 
   private whenConnectionOpened(handler) {
-    if (this.db) {
-      handler(this.db);
-    } else {
+    if(!this.openConnectionRequest$) { // The connexion hasn't been created yet or the DB deletion is in progress
+      window.setTimeout(() => this.openDbConnection().subscribe (handler), 500);
+    } else { // lets subscribe in case the db hasn't been created yet
       this.openConnectionRequest$.subscribe (handler);
     }
   }
