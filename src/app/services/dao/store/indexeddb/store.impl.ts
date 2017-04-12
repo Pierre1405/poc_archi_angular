@@ -29,7 +29,7 @@ export class EdIndexedDBStore implements EdIStore {
   }
 
   constructor (private dbName?: string) {
-    this.dbName = this.dbName? this.dbName: "localData";
+    this.dbName = this.dbName ? this.dbName : "localData";
     this.openDbConnection().subscribe(
       function (db) {
         console.log("Connected to local base", db);
@@ -64,7 +64,7 @@ export class EdIndexedDBStore implements EdIStore {
       return Observable.empty();
     }
     return Observable.create(function (observable) {
-      this.openConnectionRequest$.subscribe(function (db) {
+      this.whenConnectionOpened(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
         const transaction = db.transaction(objectName);
         const objectStore = transaction.objectStore(objectName);
@@ -113,7 +113,7 @@ export class EdIndexedDBStore implements EdIStore {
                  order: any,
                  pagination: any): Observable<EdICollectionRessource> {
     return Observable.create(function (observer) {
-      this.openConnectionRequest$.subscribe(function (db) {
+      this.whenConnectionOpened(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
         const transaction = db.transaction(objectName);
         const objectStore = transaction.objectStore(objectName);
@@ -156,8 +156,8 @@ export class EdIndexedDBStore implements EdIStore {
       }
       if (allResource$.length > 0) {
         const resources$ = Observable.merge.apply(Observable, allResource$);
-        resources$.subscribe(function () {
-          observer.next(arguments);
+        resources$.subscribe(function (resource) {
+          observer.next(resource);
         }, function () {
           observer.error(arguments);
         }, function () {
@@ -172,10 +172,11 @@ export class EdIndexedDBStore implements EdIStore {
 
   private saveResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
     return Observable.create(function(observer$) {
-      this.openConnectionRequest$.subscribe(function (db) {
+      this.whenConnectionOpened(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
         const transaction = db.transaction([objectName], "readwrite");
         transaction.oncomplete = function () {
+          observer$.next(resource);
           observer$.complete();
         };
         transaction.onerror = function (ev) {
@@ -204,6 +205,14 @@ export class EdIndexedDBStore implements EdIStore {
         };
       }.bind(this));
     }.bind(this));
+  }
+
+  private whenConnectionOpened(handler) {
+    if (this.db) {
+      handler(this.db);
+    } else {
+      this.openConnectionRequest$.subscribe (handler);
+    }
   }
 }
 
