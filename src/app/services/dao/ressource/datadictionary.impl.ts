@@ -4,6 +4,9 @@ export class DataDictionnary {
 
   private static instance: DataDictionnary;
 
+
+  // Todo remove string object alias
+  // TODO add owner metadata instead of owner ownerObjectDef
   private objectDefinitions: {[objectName: string]: ObjectDef} = {
     "Person": {
       objectName: "Person",

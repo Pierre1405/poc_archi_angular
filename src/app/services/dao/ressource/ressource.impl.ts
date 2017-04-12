@@ -34,6 +34,8 @@ export class EdRessourceFactory {
 
 }
 
+// Todo detect on change
+// TODO Implement is empty
 @Injectable()
 export class EdUnknownObjectResource implements EdIObjectResource {
 
