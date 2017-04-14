@@ -1,8 +1,8 @@
 
-import {EdIObjectResource} from "../ressource/ressource.interface";
+import {EdDaoIObjectResource} from "../ressource/resource.interface";
 import {DataDictionnary, FieldType, ObjectDef} from "../ressource/datadictionary.impl";
-export class EdStoreUtils {
-  public static instanceResourceToObject(resource: EdIObjectResource): any {
+export class EdDaoAdapterUtils {
+  public static instanceResourceToObject(resource: EdDaoIObjectResource): any {
     const result = {};
 
     const objectDefinition = <ObjectDef>resource.getMetaData().objectDef;
@@ -16,7 +16,7 @@ export class EdStoreUtils {
     return result;
   }
 
-  private static resourceFieldToObject(fieldName, resource: EdIObjectResource) {
+  private static resourceFieldToObject(fieldName, resource: EdDaoIObjectResource) {
     let fieldResult = null;
     const fieldDef = DataDictionnary.getInstance().getFieldDefinition(fieldName);
 

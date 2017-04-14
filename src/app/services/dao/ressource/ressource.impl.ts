@@ -2,34 +2,34 @@
 
 import {Observable} from "rxjs/Observable";
 import {
-  EdICollectionRessource, EdIObjectResource, EdIPrimitiveRessource
-} from "./ressource.interface";
-import {EdIStore} from "../store/store.interface";
+  EdDaoICollectionRessource, EdDaoIObjectResource, EdIPrimitiveRessource
+} from "./resource.interface";
 import {Injectable} from "@angular/core";
 import {DataDictionnary, FieldDef, FieldType, ObjectDef} from "./datadictionary.impl";
-import {EdIndexedDBStore} from "../store/indexeddb/store.impl";
+import {EdDaoStore} from "../store/store.impl";
+import {EdDaoIStore} from "../store/store.interface";
 
-export class EdRessourceFactory {
+export class EdDaoRessourceFactory {
 
-  private static instance: EdRessourceFactory = new EdRessourceFactory();
+  private static instance: EdDaoRessourceFactory = new EdDaoRessourceFactory();
 
-  private store: EdIStore;
+  private store: EdDaoIStore;
 
-  public static getInstance (): EdRessourceFactory {
+  public static getInstance (): EdDaoRessourceFactory {
     return this.instance;
   }
 
   constructor() {
     // this.store = new EdFakeStore();
-    this.store = EdIndexedDBStore.getInstance();
+    this.store = EdDaoStore.getInstance();
   }
 
-  public getResource(type: string, id: string): EdIObjectResource {
-    return new EdUnknownObjectResource(id, this.store, type);
+  public getResource(type: string, id: string): EdDaoIObjectResource {
+    return new EdDaoUnknownObjectResource(id, this.store, type);
   }
 
-  public getCollectionRessource(type: string): EdICollectionRessource {
-    return new EdUnknownCollectionResource(this.store, type, null);
+  public getCollectionRessource(type: string): EdDaoICollectionRessource {
+    return new EdDaoUnknownCollectionResource(this.store, type, null);
   }
 
 }
@@ -37,7 +37,8 @@ export class EdRessourceFactory {
 // Todo detect on change
 // TODO Implement is empty
 @Injectable()
-export class EdUnknownObjectResource implements EdIObjectResource {
+export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
+
 
   private _isRead = false;
   private attributes: Object = {};
@@ -45,16 +46,21 @@ export class EdUnknownObjectResource implements EdIObjectResource {
   private id: string;
 
 
-  constructor(id: string, private store: EdIStore, metaDataOrObjectName: (FieldDef|string)) {
-    this.metadata = EdResourceUtils.getMetadataForConstructor(metaDataOrObjectName, false);
+  constructor(id: string, private store: EdDaoIStore, metaDataOrObjectName: (FieldDef|string)) {
+    this.metadata = EdDaoResourceUtils.getMetadataForConstructor(metaDataOrObjectName, false);
     this.setID(id);
   }
 
-  public getStore(): EdIStore {
-    return this.store;
+
+  populateWithObject(object: any) {
+    throw new Error('Method not implemented.');
   }
 
-  public read(id?: string): Observable<EdIObjectResource> {
+  toObject() {
+    throw new Error('Method not implemented.');
+  }
+
+  public read(id?: string): Observable<EdDaoIObjectResource> {
     if (id) {
       this.setID(id);
     }
@@ -73,20 +79,20 @@ export class EdUnknownObjectResource implements EdIObjectResource {
     this._isRead = _isRead;
   }
 
-  write(): Observable<EdIObjectResource> {
+  write(): Observable<EdDaoIObjectResource> {
     throw new Error('Method not implemented.');
   }
 
   getProperty(field: string): EdIPrimitiveRessource {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EDUnknowPrimitiveRessource(null, DataDictionnary.getInstance().getFieldDefinition(field));
+      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(null, DataDictionnary.getInstance().getFieldDefinition(field));
     }
     return this.attributes[field];
   }
 
   setProperty(field: string, value: any) {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EDUnknowPrimitiveRessource(value, null);
+      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(value, null);
     }
     const property: EdIPrimitiveRessource = this.attributes[field];
     property.setValue(value);
@@ -102,15 +108,15 @@ export class EdUnknownObjectResource implements EdIObjectResource {
     this.attributes[field] = property;
   }
 
-  getResource(field: string): EdIObjectResource {
+  getResource(field: string): EdDaoIObjectResource {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EdUnknownObjectResource(null, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
+      this.attributes[field] = new EdDaoUnknownObjectResource(null, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
     }
     return this.attributes[field];
   }
 
   setResource(field: string, id) {
-    this.attributes[field] = new EdUnknownObjectResource(id, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
+    this.attributes[field] = new EdDaoUnknownObjectResource(id, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
   }
 
 
@@ -132,33 +138,33 @@ export class EdUnknownObjectResource implements EdIObjectResource {
     return this.id;
   }
 
-  createResource(field: string, property: EdIObjectResource) {
+  createResource(field: string, property: EdDaoIObjectResource) {
     this.attributes[field] = property;
   }
 
-  getCollectionResource(fieldName: string): EdICollectionRessource {
+  getCollectionResource(fieldName: string): EdDaoICollectionRessource {
     if (!this.attributes.hasOwnProperty(fieldName)) {
-      this.attributes[fieldName] = new EdUnknownCollectionResource(
+      this.attributes[fieldName] = new EdDaoUnknownCollectionResource(
         this.store, DataDictionnary.getInstance().getFieldDefinition(fieldName),
         this.getID());
     }
     return this.attributes[fieldName];
   }
 
-  createCollectionResource(field: string, property: EdICollectionRessource) {
+  createCollectionResource(field: string, property: EdDaoICollectionRessource) {
     this.attributes[field] = property;
   }
 
   public toNonCircularObjectForJSON(): any {
-    return EdResourceUtils.getNonCircularResourceForJson(this);
+    return EdDaoResourceUtils.getNonCircularResourceForJson(this);
   }
 }
 
 
 @Injectable()
-export class EdUnknownCollectionResource implements EdICollectionRessource {
+export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource {
 
-  private resources: EdIObjectResource[] = [];
+  private resources: EdDaoIObjectResource[] = [];
   private metaData: FieldDef;
 
   private _isRead = false;
@@ -166,13 +172,21 @@ export class EdUnknownCollectionResource implements EdICollectionRessource {
 
 
 
-  constructor(private store: EdIStore, metaDataOrObjectName: (FieldDef|string), ownerObjectID) {
-    this.metaData = EdResourceUtils.getMetadataForConstructor(metaDataOrObjectName, true);
+  constructor(private store: EdDaoIStore, metaDataOrObjectName: (FieldDef|string), ownerObjectID) {
+    this.metaData = EdDaoResourceUtils.getMetadataForConstructor(metaDataOrObjectName, true);
     this.ownerObjectID = ownerObjectID;
   }
 
+  populateWithObject(object: any) {
+    throw new Error('Method not implemented.');
+  }
 
-  read(): Observable<EdICollectionRessource> {
+  toObject() {
+    throw new Error('Method not implemented.');
+  }
+
+
+  read(): Observable<EdDaoICollectionRessource> {
     const filter = {};
     if (this.ownerObjectID && this.getMetaData().propertyName) {
       filter[this.getMetaData().propertyName] = this.ownerObjectID;
@@ -188,30 +202,30 @@ export class EdUnknownCollectionResource implements EdICollectionRessource {
     this._isRead = _isRead;
   }
 
-  write(): Observable<EdICollectionRessource> {
+  write(): Observable<EdDaoICollectionRessource> {
     throw new Error('Method not implemented.');
   }
 
-  setResources(resources: EdIObjectResource[]) {
+  setResources(resources: EdDaoIObjectResource[]) {
     this.resources = resources;
   }
 
-  getResources(): EdIObjectResource[] {
+  getResources(): EdDaoIObjectResource[] {
     return this.resources;
   }
 
   addResources(ids: string[]) {
     for (const id of ids) {
-      const newResource = new EdUnknownObjectResource(id, this.store, this.getMetaData());
+      const newResource = new EdDaoUnknownObjectResource(id, this.store, this.getMetaData());
       this.getResources().push(newResource);
     }
   }
 
-  readSome(filter: any, pagination: any, order: any): Observable<EdICollectionRessource> {
+  readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource> {
     throw new Error('Method not implemented.');
   }
 
-  readNext(): Observable<EdICollectionRessource> {
+  readNext(): Observable<EdDaoICollectionRessource> {
     throw new Error('Method not implemented.');
   }
 
@@ -221,7 +235,7 @@ export class EdUnknownCollectionResource implements EdICollectionRessource {
 }
 
 
-export class EDUnknowPrimitiveRessource implements EdIPrimitiveRessource {
+export class EdDaoUnknowPrimitiveRessource implements EdIPrimitiveRessource {
 
   // TODO: metadata should be settable with fieldName
   constructor (private value: any, private metadata: FieldDef) {
@@ -243,7 +257,8 @@ export class EDUnknowPrimitiveRessource implements EdIPrimitiveRessource {
 }
 
 
-class EdResourceUtils {
+class EdDaoResourceUtils {
+
   public static getMetadataForConstructor(metaDataOrObjectName: (FieldDef|string), isMultival: boolean): FieldDef {
     let metaData: FieldDef = null;
     if (typeof metaDataOrObjectName === "string") {
@@ -261,7 +276,7 @@ class EdResourceUtils {
     return metaData;
   }
 
-  public static getNonCircularResourceForJson(resource: EdIObjectResource): any {
+  public static getNonCircularResourceForJson(resource: EdDaoIObjectResource): any {
     const result = {};
 
     result["id"] = resource.getID();
@@ -275,9 +290,9 @@ class EdResourceUtils {
             result[fieldName] = property.getValue();
           } else {
             if (fieldDef.isMultival) {
-              result[fieldName] = EdResourceUtils.getNonCircularCollectionForJson(resource.getCollectionResource(fieldName));
+              result[fieldName] = EdDaoResourceUtils.getNonCircularCollectionForJson(resource.getCollectionResource(fieldName));
             } else {
-              result[fieldName] = EdResourceUtils.getNonCircularResourceForJson(resource.getResource(fieldName));
+              result[fieldName] = EdDaoResourceUtils.getNonCircularResourceForJson(resource.getResource(fieldName));
             }
           }
         }
@@ -286,10 +301,10 @@ class EdResourceUtils {
     return result;
   }
 
-  private static getNonCircularCollectionForJson(collectionResource: EdICollectionRessource): Array<any> {
+  private static getNonCircularCollectionForJson(collectionResource: EdDaoICollectionRessource): Array<any> {
     const result: Array<any> = [];
     for (const resource of collectionResource.getResources()) {
-      result.push(EdResourceUtils.getNonCircularResourceForJson(resource));
+      result.push(EdDaoResourceUtils.getNonCircularResourceForJson(resource));
     }
     return result;
   }

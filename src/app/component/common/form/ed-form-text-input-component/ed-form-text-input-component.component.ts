@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {EdIObjectResource, EdIPrimitiveRessource} from "../../../../services/dao/ressource/ressource.interface";
+import {EdDaoIObjectResource, EdIPrimitiveRessource} from "../../../../services/dao/ressource/resource.interface";
 
 @Component({
   selector: 'ed-form-text-input',

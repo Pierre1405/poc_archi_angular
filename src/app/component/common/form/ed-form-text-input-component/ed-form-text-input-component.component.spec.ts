@@ -3,8 +3,8 @@ import {async, ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/t
 import { EdFormTextInputComponent } from './ed-form-text-input-component.component';
 import {FormsModule} from "@angular/forms";
 import {
-  EdRessourceFactory, EdUnknownObjectResource,
-  EDUnknowPrimitiveRessource
+  EdDaoRessourceFactory, EdDaoUnknownObjectResource,
+  EdDaoUnknowPrimitiveRessource
 } from "../../../../services/dao/ressource/ressource.impl";
 import {DataDictionnary, FieldType} from "../../../../services/dao/ressource/datadictionary.impl";
 
@@ -27,7 +27,7 @@ describe('EdFormTextInputComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    component.resource = new EDUnknowPrimitiveRessource(null, {
+    component.resource = new EdDaoUnknowPrimitiveRessource(null, {
       type: FieldType.STRING,
       isMultival: false,
       propertyName: "PerName"
@@ -42,7 +42,7 @@ describe('EdFormTextInputComponent', () => {
   it('should display property value', fakeAsync(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    const resource = new EDUnknowPrimitiveRessource(null, {
+    const resource = new EdDaoUnknowPrimitiveRessource(null, {
       type: FieldType.STRING,
       isMultival: false,
       propertyName: "PerName"

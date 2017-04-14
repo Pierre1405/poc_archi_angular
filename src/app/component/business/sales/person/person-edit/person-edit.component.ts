@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import {EdRessourceFactory, EdUnknownObjectResource} from "../../../../../services/dao/ressource/ressource.impl";
+import {EdDaoRessourceFactory, EdDaoUnknownObjectResource} from "../../../../../services/dao/ressource/ressource.impl";
 import {Observable} from "rxjs/Observable";
 import {ActivatedRoute} from "@angular/router";
 
 const personProvider = {
-  provide: EdUnknownObjectResource,
+  provide: EdDaoUnknownObjectResource,
   useFactory: () => {
-    return EdRessourceFactory.getInstance().getResource("Person", null);
+    return EdDaoRessourceFactory.getInstance().getResource("Person", null);
   }
 };
 
@@ -20,7 +20,7 @@ const personProvider = {
 })
 export class PersonEditComponent implements OnInit {
 
-  constructor(private route: ActivatedRoute, public person: EdUnknownObjectResource) {
+  constructor(private route: ActivatedRoute, public person: EdDaoUnknownObjectResource) {
 
     person.getResource("PerBestFriend").getProperty("PerName");
 
@@ -38,11 +38,13 @@ export class PersonEditComponent implements OnInit {
 
   save() {
     console.log("save");
+    /*
     this.person.getStore().saveResources([
       this.person.getResource("PerBestFriend"),
       this.person.getCollectionResource("PerOthersFriends"),
       this.person
     ]).subscribe(v => console.log(v), v => console.log(v), () => console.log("complete"));
+    */
   }
 
   ngOnInit() {

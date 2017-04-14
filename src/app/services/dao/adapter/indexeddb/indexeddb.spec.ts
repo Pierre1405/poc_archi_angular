@@ -1,20 +1,20 @@
-import {EdIndexedDBStore} from "./store.impl";
-import {EdUnknownCollectionResource, EdUnknownObjectResource} from "../../ressource/ressource.impl";
+import {EdIndexedDBAdapter} from "./store.impl";
+import {EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource} from "../../ressource/ressource.impl";
 import {Observable} from "rxjs/Observable";
 
 describe('save and read indexed DB', () => {
 
   let createdPerson1 = null;
   let createdPerson2 = null;
-  let store = EdIndexedDBStore.getInstance("unitTest");
+  let store = EdIndexedDBAdapter.getInstance("unitTest");
 
   beforeEach(function () {
-    createdPerson1 = new EdUnknownObjectResource(null, store, "Person");
+    createdPerson1 = new EdDaoUnknownObjectResource(null, store, "Person");
     createdPerson1.setProperty("PerFstName", "Pierrot");
     createdPerson1.setProperty("PerName", "Delaluna");
     createdPerson1.setProperty("PerTitle", "El");
 
-    createdPerson2 = new EdUnknownObjectResource(null, store, "Person");
+    createdPerson2 = new EdDaoUnknownObjectResource(null, store, "Person");
     createdPerson2.setProperty("PerFstName", "Pierrot2");
 
     createdPerson2.setProperty("PerName", "Delaluna2");
@@ -30,8 +30,8 @@ describe('save and read indexed DB', () => {
   });
 
   let assertCreation = function (done) {
-    const loadResource1 = new EdUnknownObjectResource(createdPerson1.getID(), store, "Person");
-    const loadResource2 = new EdUnknownObjectResource(createdPerson2.getID(), store, "Person");
+    const loadResource1 = new EdDaoUnknownObjectResource(createdPerson1.getID(), store, "Person");
+    const loadResource2 = new EdDaoUnknownObjectResource(createdPerson2.getID(), store, "Person");
     const loadResource1$ = store.readResource(loadResource1);
     const loadResource2$ = store.readResource(loadResource2);
     loadResource1$.subscribe(function (dispatchedResource) {
@@ -65,7 +65,7 @@ describe('save and read indexed DB', () => {
 
 
   it('should create a collection', function(done) {
-    const collection = new EdUnknownCollectionResource(store, "Person", null);
+    const collection = new EdDaoUnknownCollectionResource(store, "Person", null);
     collection.getResources().push(createdPerson1);
     collection.getResources().push(createdPerson2);
 

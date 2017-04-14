@@ -1,17 +1,17 @@
 
 
-import {EdIStore} from "../store.interface";
-import {EdICollectionRessource, EdIObjectResource} from "../../ressource/ressource.interface";
+import {EdIAdapter} from "../adapter.interface";
+import {EdDaoICollectionRessource, EdDaoIObjectResource} from "../../ressource/resource.interface";
 import {ObjectUnsubscribedError, Observable} from "rxjs/Rx";
 import {DataDictionnary, FieldType, ObjectDef} from "../../ressource/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
-import {EdUnknownCollectionResource, EdUnknownObjectResource} from "../../ressource/ressource.impl";
-import {EdStoreUtils} from "../store.utils";
+import {EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource} from "../../ressource/ressource.impl";
+import {EdDaoAdapterUtils} from "../adapter.utils";
 
-export class EdIndexedDBStore implements EdIStore {
+export class EdDaoIndexedDBAdapter implements EdIAdapter {
 
-  private static instances:{[dbName:string]: EdIndexedDBStore} = {};
+  private static instances: {[dbName: string]: EdDaoIndexedDBAdapter} = {};
 
   private openConnectionRequest$: Observable<IDBDatabase> = Observable.create();
   private db: IDBDatabase = null;
@@ -30,12 +30,12 @@ export class EdIndexedDBStore implements EdIStore {
     }
   }
 
-  public static getInstance(dbName?:string) {
+  public static getInstance(dbName?: string) {
     dbName = dbName ? dbName : "localData";
-    if(!EdIndexedDBStore.instances[dbName]) {
-      EdIndexedDBStore.instances[dbName] = new EdIndexedDBStore(dbName);
+    if (!EdDaoIndexedDBAdapter.instances[dbName]) {
+      EdDaoIndexedDBAdapter.instances[dbName] = new EdDaoIndexedDBAdapter(dbName);
     }
-    return EdIndexedDBStore.instances[dbName];
+    return EdDaoIndexedDBAdapter.instances[dbName];
   }
 
   private constructor (private dbName: string) {
@@ -65,7 +65,7 @@ export class EdIndexedDBStore implements EdIStore {
       };
       openRequest.onupgradeneeded = function (ev: IDBVersionChangeEvent) {
         const db: IDBDatabase = (<any>ev.target).result;
-        EdIndexedDBStore.createLocalDB(db);
+        EdDaoIndexedDBAdapter.createLocalDB(db);
       }.bind(this);
     }.bind(this));
     return this.openConnectionRequest$;
@@ -75,33 +75,32 @@ export class EdIndexedDBStore implements EdIStore {
     return Observable.create(function (observer) {
       const clearTableObservable: Observable<IDBObjectStore>[] = [];
       for (let i = 0; i < this.db.objectStoreNames.length; i++) {
-        clearTableObservable.push(Observable.create(function (observer) {
+        clearTableObservable.push(Observable.create(function (clearTableObserver) {
           const objectName = this.db.objectStoreNames[i];
           const transaction = this.db.transaction(objectName, "readwrite");
           const objectStore = transaction.objectStore(objectName);
 
-          debugger;
-          let idbRequest = objectStore.clear();
+          const idbRequest = objectStore.clear();
           idbRequest.onerror = function() {
-            observer.error();
-          }
+            clearTableObserver.error();
+          };
           idbRequest.onsuccess = function() {
-            observer.next(objectStore);
-            observer.complete();
-          }
+            clearTableObserver.next(objectStore);
+            clearTableObserver.complete();
+          };
         }.bind(this)));
       }
       Observable.merge.apply(Observable, clearTableObservable).subscribe(function(v) {
         observer.next(v);
-      },function(error) {
+      }, function(error) {
         observer.error(error);
-      },function() {
+      }, function() {
         observer.complete();
       });
     }.bind(this));
   }
 
-  readResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
+  readResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource> {
     if (!resource.getID()) {
       return Observable.empty();
     }
@@ -111,7 +110,7 @@ export class EdIndexedDBStore implements EdIStore {
         const transaction = db.transaction(objectName);
         const objectStore = transaction.objectStore(objectName);
 
-        const idbRequest = objectStore.get(EdIndexedDBStore.parseID(resource.getID()));
+        const idbRequest = objectStore.get(EdDaoIndexedDBAdapter.parseID(resource.getID()));
         idbRequest.onerror = function (ev) {
           observable.error(ev);
         };
@@ -125,7 +124,7 @@ export class EdIndexedDBStore implements EdIStore {
     }.bind(this));
   }
 
-  private fillResourceWithIDBResult(resource: EdIObjectResource, result: any) {
+  private fillResourceWithIDBResult(resource: EdDaoIObjectResource, result: any) {
     const objectDef = (<ObjectDef> resource.getMetaData().objectDef);
     const fieldDefs = objectDef.fields;
     for (const fieldName in fieldDefs) {
@@ -136,10 +135,10 @@ export class EdIndexedDBStore implements EdIStore {
           resource.setProperty(fieldName, dbValue ? dbValue : null);
         } else {
           if (fieldDef.isMultival) {
-            const newCollection: EdUnknownCollectionResource = new EdUnknownCollectionResource(this, fieldDef, resource.getID());
+            const newCollection: EdDaoUnknownCollectionResource = new EdDaoUnknownCollectionResource(this, fieldDef, resource.getID());
             resource.createCollectionResource(fieldName, newCollection);
           } else {
-            const newResource: EdIObjectResource = new EdUnknownObjectResource(dbValue, this, fieldDef);
+            const newResource: EdDaoIObjectResource = new EdDaoUnknownObjectResource(dbValue, this, fieldDef);
             resource.createResource(fieldName, newResource);
           }
         }
@@ -150,10 +149,10 @@ export class EdIndexedDBStore implements EdIStore {
     resource.setIsRead(true);
   }
 
-  readCollection(resource: EdICollectionRessource,
+  readCollection(resource: EdDaoICollectionRessource,
                  filter: {[fieldName: string]: any},
                  order: any,
-                 pagination: any): Observable<EdICollectionRessource> {
+                 pagination: any): Observable<EdDaoICollectionRessource> {
     return Observable.create(function (observer) {
       this.whenConnectionOpened(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
@@ -165,11 +164,11 @@ export class EdIndexedDBStore implements EdIStore {
           observer.error(ev);
         };
 
-        const result: EdIObjectResource[] = [];
+        const result: EdDaoIObjectResource[] = [];
         idbRequest.onsuccess = function (ev) {
           const cursor: IDBCursor = ev.target["result"];
           if (cursor) {
-            const newResource: EdIObjectResource = new EdUnknownObjectResource(null, this, objectName);
+            const newResource: EdDaoIObjectResource = new EdDaoUnknownObjectResource(null, this, objectName);
             this.fillResourceWithIDBResult(newResource, cursor["value"]);
             result.push(newResource);
             cursor.continue();
@@ -184,16 +183,16 @@ export class EdIndexedDBStore implements EdIStore {
     }.bind(this));
   }
 
-  saveResources(resources: (EdIObjectResource | EdICollectionRessource)[]): Observable<any> {
+  saveResources(resources: (EdDaoIObjectResource | EdDaoICollectionRessource)[]): Observable<any> {
     return Observable.create(function (observer) {
       const allResource$: Observable<any>[] = [];
       for (const resource of resources) {
         if (resource.getMetaData().isMultival) {
-          for (const resourceFromMultival of (<EdICollectionRessource>resource).getResources()) {
+          for (const resourceFromMultival of (<EdDaoICollectionRessource>resource).getResources()) {
             allResource$.push(this.saveResource(resourceFromMultival));
           }
         } else {
-          allResource$.push(this.saveResource(<EdIObjectResource> resource));
+          allResource$.push(this.saveResource(<EdDaoIObjectResource> resource));
         }
       }
       if (allResource$.length > 0) {
@@ -212,7 +211,7 @@ export class EdIndexedDBStore implements EdIStore {
     }.bind(this));
   }
 
-  private saveResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
+  private saveResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource> {
     return Observable.create(function(observer$) {
       this.whenConnectionOpened(function (db) {
         const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
@@ -232,10 +231,10 @@ export class EdIndexedDBStore implements EdIStore {
         let request: IDBRequest;
 
 
-        const newRecord = EdStoreUtils.instanceResourceToObject(resource);
+        const newRecord = EdDaoAdapterUtils.instanceResourceToObject(resource);
         const objectRadical = (<ObjectDef> resource.getMetaData().objectDef).radical;
         if (resource.getID()) {
-          newRecord[objectRadical + "ID"] = EdIndexedDBStore.parseID(newRecord[objectRadical + "ID"]);
+          newRecord[objectRadical + "ID"] = EdDaoIndexedDBAdapter.parseID(newRecord[objectRadical + "ID"]);
           request = objectStore.put(newRecord);
         } else {
           delete newRecord[objectRadical + "ID"];
@@ -250,12 +249,20 @@ export class EdIndexedDBStore implements EdIStore {
   }
 
   private whenConnectionOpened(handler) {
-    if(!this.openConnectionRequest$) { // The connexion hasn't been created yet or the DB deletion is in progress
+    if (!this.openConnectionRequest$) { // The connexion hasn't been created yet or the DB deletion is in progress
       window.setTimeout(() => this.openDbConnection().subscribe (handler), 500);
     } else { // lets subscribe in case the db hasn't been created yet
       this.openConnectionRequest$.subscribe (handler);
     }
     return this.openConnectionRequest$;
+  }
+
+  mapResourceFieldsToResultData(resourceName: string, applicationResource: { [key: string]: any; }): { [key: string]: any; } {
+    throw new Error('Method not implemented.');
+  }
+
+  mapResultDataToResourceFields(resourceName: string, persistanceResult: { [key: string]: any; }): { [key: string]: any; } {
+    throw new Error('Method not implemented.');
   }
 }
 

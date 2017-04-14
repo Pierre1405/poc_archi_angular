@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {
-  EdRessourceFactory,
-  EdUnknownCollectionResource
+  EdDaoRessourceFactory,
+  EdDaoUnknownCollectionResource
 } from "../../../../../services/dao/ressource/ressource.impl";
 
 
@@ -10,15 +10,15 @@ import {
   templateUrl: './person-list.component.html',
   styleUrls: ['./person-list.component.css'],
   providers: [{
-    provide: EdUnknownCollectionResource,
+    provide: EdDaoUnknownCollectionResource,
     useFactory: () => {
-      return EdRessourceFactory.getInstance().getCollectionRessource("Person");
+      return EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
     }
   }]
 })
 export class PersonListComponent implements OnInit {
 
-  constructor(public persons: EdUnknownCollectionResource) {
+  constructor(public persons: EdDaoUnknownCollectionResource) {
     console.log(persons);
     persons.read().subscribe(v => console.log(v));
   }

@@ -1,9 +1,9 @@
-import {Observable} from "rxjs";
-import {EdICollectionRessource, EdIObjectResource, EdIRessource} from "../ressource/ressource.interface";
-import {DataDictionnary, FieldDef, FieldType, ObjectDef} from "../ressource/datadictionary.impl";
+import {EdDaoICollectionRessource, EdDaoIObjectResource} from "../ressource/resource.interface";
+import {Observable} from "rxjs/Observable";
 
-export interface EdIStore {
-  readResource(resource: EdIObjectResource): Observable<EdIObjectResource>;
-  readCollection(resource: EdICollectionRessource, filter: any, order: any, pagination: any): Observable<EdICollectionRessource>;
-  saveResources(resources: (EdIObjectResource|EdICollectionRessource)[]): Observable<any>;
+export interface EdDaoIStore {
+  readResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource>;
+  readCollection(resource: EdDaoICollectionRessource, filter: any, order: any, pagination: any): Observable<EdDaoICollectionRessource>;
+  saveResources(resources: (EdDaoIObjectResource|EdDaoICollectionRessource)[]):
+                              Observable<(EdDaoIObjectResource|EdDaoICollectionRessource)[]>;
 }
