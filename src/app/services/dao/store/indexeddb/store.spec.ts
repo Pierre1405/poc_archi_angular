@@ -9,7 +9,6 @@ describe('save and read indexed DB', () => {
   let store = EdIndexedDBStore.getInstance("unitTest");
 
   beforeEach(function () {
-    debugger;
     createdPerson1 = new EdUnknownObjectResource(null, store, "Person");
     createdPerson1.setProperty("PerFstName", "Pierrot");
     createdPerson1.setProperty("PerName", "Delaluna");
@@ -25,7 +24,6 @@ describe('save and read indexed DB', () => {
 
   // TODO implement reset database
   afterEach(function (done) {
-    debugger;
     store.clearAllTables().subscribe(
       done
     );
@@ -67,7 +65,6 @@ describe('save and read indexed DB', () => {
 
 
   it('should create a collection', function(done) {
-    debugger;
     const collection = new EdUnknownCollectionResource(store, "Person", null);
     collection.getResources().push(createdPerson1);
     collection.getResources().push(createdPerson2);
@@ -88,7 +85,6 @@ describe('save and read indexed DB', () => {
 
 
   it('create 2 objects', function(done) {
-    debugger;
     store.saveResources([createdPerson1, createdPerson2]).subscribe(
       null,
       function (error) {
