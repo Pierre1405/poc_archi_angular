@@ -6,10 +6,10 @@ describe('save and read indexed DB', () => {
 
   let createdPerson1 = null;
   let createdPerson2 = null;
-  let store = null;
+  let store = EdIndexedDBStore.getInstance("unitTest");
 
   beforeEach(function () {
-    store = new EdIndexedDBStore("unitTest");
+    debugger;
     createdPerson1 = new EdUnknownObjectResource(null, store, "Person");
     createdPerson1.setProperty("PerFstName", "Pierrot");
     createdPerson1.setProperty("PerName", "Delaluna");
@@ -17,18 +17,23 @@ describe('save and read indexed DB', () => {
 
     createdPerson2 = new EdUnknownObjectResource(null, store, "Person");
     createdPerson2.setProperty("PerFstName", "Pierrot2");
+
     createdPerson2.setProperty("PerName", "Delaluna2");
+
     createdPerson2.setProperty("PerTitle", "El2");
   });
 
   // TODO implement reset database
   afterEach(function (done) {
-    store.deleteDb().subscribe( () => done(), () => done(), () => done());
+    debugger;
+    store.clearAllTables().subscribe(
+      done
+    );
   });
 
   let assertCreation = function (done) {
-    const loadResource1 = new EdUnknownObjectResource("1", store, "Person");
-    const loadResource2 = new EdUnknownObjectResource("2", store, "Person");
+    const loadResource1 = new EdUnknownObjectResource(createdPerson1.getID(), store, "Person");
+    const loadResource2 = new EdUnknownObjectResource(createdPerson2.getID(), store, "Person");
     const loadResource1$ = store.readResource(loadResource1);
     const loadResource2$ = store.readResource(loadResource2);
     loadResource1$.subscribe(function (dispatchedResource) {
@@ -62,11 +67,10 @@ describe('save and read indexed DB', () => {
 
 
   it('should create a collection', function(done) {
+    debugger;
     const collection = new EdUnknownCollectionResource(store, "Person", null);
     collection.getResources().push(createdPerson1);
     collection.getResources().push(createdPerson2);
-
-    debugger;
 
     store.saveResources([collection]).subscribe(
       null,
@@ -75,6 +79,8 @@ describe('save and read indexed DB', () => {
         fail(error.toString());
       },
       function () {
+        expect(createdPerson1.getID()).toBeTruthy();
+        expect(createdPerson2.getID()).toBeTruthy();
         assertCreation.call(this, done);
       }.bind(this)
     );
@@ -82,6 +88,7 @@ describe('save and read indexed DB', () => {
 
 
   it('create 2 objects', function(done) {
+    debugger;
     store.saveResources([createdPerson1, createdPerson2]).subscribe(
       null,
       function (error) {
@@ -89,9 +96,10 @@ describe('save and read indexed DB', () => {
         fail(error.toString());
       },
       function () {
+        expect(createdPerson1.getID()).toBeTruthy();
+        expect(createdPerson2.getID()).toBeTruthy();
         assertCreation.call(this, done);
       }.bind(this)
     );
   });
-
 });

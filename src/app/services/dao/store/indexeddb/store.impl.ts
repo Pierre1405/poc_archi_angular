@@ -2,7 +2,7 @@
 
 import {EdIStore} from "../store.interface";
 import {EdICollectionRessource, EdIObjectResource} from "../../ressource/ressource.interface";
-import {Observable} from "rxjs/Rx";
+import {ObjectUnsubscribedError, Observable} from "rxjs/Rx";
 import {DataDictionnary, FieldType, ObjectDef} from "../../ressource/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
@@ -10,6 +10,8 @@ import {EdUnknownCollectionResource, EdUnknownObjectResource} from "../../ressou
 import {EdStoreUtils} from "../store.utils";
 
 export class EdIndexedDBStore implements EdIStore {
+
+  private static instances:{[dbName:string]: EdIndexedDBStore} = {};
 
   private openConnectionRequest$: Observable<IDBDatabase> = Observable.create();
   private db: IDBDatabase = null;
@@ -28,8 +30,15 @@ export class EdIndexedDBStore implements EdIStore {
     }
   }
 
-  constructor (private dbName?: string) {
-    this.dbName = this.dbName ? this.dbName : "localData";
+  public static getInstance(dbName?:string) {
+    dbName = dbName ? dbName : "localData";
+    if(!EdIndexedDBStore.instances[dbName]) {
+      EdIndexedDBStore.instances[dbName] = new EdIndexedDBStore(dbName);
+    }
+    return EdIndexedDBStore.instances[dbName];
+  }
+
+  private constructor (private dbName: string) {
     this.openDbConnection().subscribe(
       function (db) {
         console.log("Connected to local base", db);
@@ -62,29 +71,34 @@ export class EdIndexedDBStore implements EdIStore {
     return this.openConnectionRequest$;
   }
 
-  public closeDbConnection() {
-    this.db.close();
-  }
-
-
-  public deleteDb() {
+  public clearAllTables(): Observable<any> {
     return Observable.create(function (observer) {
-      this.closeDbConnection();
-      this.db = null;
-      this.openConnectionRequest$ = null;
-      const deleteDatabaseRequest = window.indexedDB.deleteDatabase("unitTest");
-      deleteDatabaseRequest.onsuccess = function() {
-        observer.next();
-        observer.complete();
-      };
-      deleteDatabaseRequest.onerror = function() {
-        observer.error(arguments);
-      };
-      deleteDatabaseRequest.onblocked = function() {
-        observer.error(arguments);
-      };
-    }.bind(this));
+      const clearTableObservable: Observable<IDBObjectStore>[] = [];
+      for (let i = 0; i < this.db.objectStoreNames.length; i++) {
+        clearTableObservable.push(Observable.create(function (observer) {
+          const objectName = this.db.objectStoreNames[i];
+          const transaction = this.db.transaction(objectName, "readwrite");
+          const objectStore = transaction.objectStore(objectName);
 
+          debugger;
+          let idbRequest = objectStore.clear();
+          idbRequest.onerror = function() {
+            observer.error();
+          }
+          idbRequest.onsuccess = function() {
+            observer.next(objectStore);
+            observer.complete();
+          }
+        }.bind(this)));
+      }
+      Observable.merge.apply(Observable, clearTableObservable).subscribe(function(v) {
+        observer.next(v);
+      },function(error) {
+        observer.error(error);
+      },function() {
+        observer.complete();
+      });
+    }.bind(this));
   }
 
   readResource(resource: EdIObjectResource): Observable<EdIObjectResource> {
@@ -241,6 +255,7 @@ export class EdIndexedDBStore implements EdIStore {
     } else { // lets subscribe in case the db hasn't been created yet
       this.openConnectionRequest$.subscribe (handler);
     }
+    return this.openConnectionRequest$;
   }
 }
 

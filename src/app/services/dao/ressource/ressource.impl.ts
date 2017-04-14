@@ -21,7 +21,7 @@ export class EdRessourceFactory {
 
   constructor() {
     // this.store = new EdFakeStore();
-    this.store = new EdIndexedDBStore();
+    this.store = EdIndexedDBStore.getInstance();
   }
 
   public getResource(type: string, id: string): EdIObjectResource {
