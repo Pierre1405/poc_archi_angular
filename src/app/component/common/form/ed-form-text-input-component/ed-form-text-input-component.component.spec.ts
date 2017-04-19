@@ -5,7 +5,7 @@ import {FormsModule} from "@angular/forms";
 import {
   EdDaoRessourceFactory, EdDaoUnknownObjectResource,
   EdDaoUnknowPrimitiveRessource
-} from "../../../../services/dao/ressource/ressource.impl";
+} from "../../../../services/dao/ressource/resource.impl";
 import {DataDictionnary, FieldType} from "../../../../services/dao/ressource/datadictionary.impl";
 
 describe('EdFormTextInputComponent', () => {
@@ -27,11 +27,7 @@ describe('EdFormTextInputComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    component.resource = new EdDaoUnknowPrimitiveRessource(null, {
-      type: FieldType.STRING,
-      isMultival: false,
-      propertyName: "PerName"
-    });
+    component.resource = new EdDaoUnknowPrimitiveRessource(null, "PerName");
     fixture.detectChanges();
   });
 
@@ -42,11 +38,7 @@ describe('EdFormTextInputComponent', () => {
   it('should display property value', fakeAsync(() => {
     fixture = TestBed.createComponent(EdFormTextInputComponent);
     component = fixture.componentInstance;
-    const resource = new EdDaoUnknowPrimitiveRessource(null, {
-      type: FieldType.STRING,
-      isMultival: false,
-      propertyName: "PerName"
-    });
+    const resource = new EdDaoUnknowPrimitiveRessource(null, "PerName");
     component.resource = resource;
 
     const compiled = fixture.debugElement.nativeElement;

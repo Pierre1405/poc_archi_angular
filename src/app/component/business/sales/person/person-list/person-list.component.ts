@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {
   EdDaoRessourceFactory,
   EdDaoUnknownCollectionResource
-} from "../../../../../services/dao/ressource/ressource.impl";
+} from "../../../../../services/dao/ressource/resource.impl";
 
 
 @Component({

@@ -5,7 +5,7 @@ export class EdDaoAdapterUtils {
   public static instanceResourceToObject(resource: EdDaoIObjectResource): any {
     const result = {};
 
-    const objectDefinition = <ObjectDef>resource.getMetaData().objectDef;
+    const objectDefinition = resource.getMetaData().objectDef;
 
     const fieldDefs = objectDefinition.fields;
     for (const fieldName in fieldDefs) {

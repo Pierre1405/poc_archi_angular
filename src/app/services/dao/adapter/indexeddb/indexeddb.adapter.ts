@@ -1,15 +1,16 @@
 
 
 import {EdIAdapter} from "../adapter.interface";
-import {EdDaoICollectionRessource, EdDaoIObjectResource} from "../../ressource/resource.interface";
-import {ObjectUnsubscribedError, Observable} from "rxjs/Rx";
-import {DataDictionnary, FieldType, ObjectDef} from "../../ressource/datadictionary.impl";
+import {EdDaoIObjectResource} from "../../ressource/resource.interface";
+import {DataDictionnary} from "../../ressource/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
-import {EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource} from "../../ressource/ressource.impl";
-import {EdDaoAdapterUtils} from "../adapter.utils";
+import {Observable} from "rxjs";
+import {ApplicationRawData, PersistanceRawData} from "../../store/store.impl";
+import {resource} from "selenium-webdriver/http";
 
 export class EdDaoIndexedDBAdapter implements EdIAdapter {
+
 
   private static instances: {[dbName: string]: EdDaoIndexedDBAdapter} = {};
 
@@ -25,7 +26,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     for (const objectName in instance.getObjectDefinitions()) {
       if (instance.getObjectDefinitions().hasOwnProperty(objectName)) {
         const objectDef = instance.getObjectDefinitions()[objectName];
-        db.createObjectStore(objectDef.objectName, {keyPath: objectDef.radical + "ID", autoIncrement: true});
+        db.createObjectStore(objectDef.name, {keyPath: objectDef.radical + "ID", autoIncrement: true});
       }
     }
   }
@@ -100,81 +101,53 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     }.bind(this));
   }
 
-  readResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource> {
-    if (!resource.getID()) {
+  readResource(resourceID: string, resourceName: string): Observable<PersistanceRawData> {
+    if (!resourceID) {
       return Observable.empty();
     }
     return Observable.create(function (observable) {
       this.whenConnectionOpened(function (db) {
-        const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
-        const transaction = db.transaction(objectName);
-        const objectStore = transaction.objectStore(objectName);
+        const transaction = db.transaction(resourceName);
+        const objectStore = transaction.objectStore(resourceName);
 
-        const idbRequest = objectStore.get(EdDaoIndexedDBAdapter.parseID(resource.getID()));
+        const idbRequest = objectStore.get(EdDaoIndexedDBAdapter.parseID(resourceID));
         idbRequest.onerror = function (ev) {
           observable.error(ev);
         };
         idbRequest.onsuccess = function () {
           const result: any = idbRequest.result;
-          this.fillResourceWithIDBResult(resource, result);
-          observable.next(resource);
+          observable.next(result);
           observable.complete();
         }.bind(this);
       }.bind(this), null, null);
     }.bind(this));
   }
 
-  private fillResourceWithIDBResult(resource: EdDaoIObjectResource, result: any) {
-    const objectDef = (<ObjectDef> resource.getMetaData().objectDef);
-    const fieldDefs = objectDef.fields;
-    for (const fieldName in fieldDefs) {
-      if (fieldDefs.hasOwnProperty(fieldName)) {
-        const fieldDef = fieldDefs[fieldName];
-        const dbValue = result[fieldName];
-        if (fieldDef.type !== FieldType.RESOURCE) {
-          resource.setProperty(fieldName, dbValue ? dbValue : null);
-        } else {
-          if (fieldDef.isMultival) {
-            const newCollection: EdDaoUnknownCollectionResource = new EdDaoUnknownCollectionResource(this, fieldDef, resource.getID());
-            resource.createCollectionResource(fieldName, newCollection);
-          } else {
-            const newResource: EdDaoIObjectResource = new EdDaoUnknownObjectResource(dbValue, this, fieldDef);
-            resource.createResource(fieldName, newResource);
-          }
-        }
-      }
-    }
-    const idFieldName = objectDef.radical + "ID";
-    resource.setID(result[idFieldName]);
-    resource.setIsRead(true);
-  }
-
-  readCollection(resource: EdDaoICollectionRessource,
-                 filter: {[fieldName: string]: any},
-                 order: any,
-                 pagination: any): Observable<EdDaoICollectionRessource> {
+  // TODO implement filter
+  readCollection(resourceName: string,
+                 filter: any, order: any, pagination: any): Observable<PersistanceRawData[]> {
     return Observable.create(function (observer) {
       this.whenConnectionOpened(function (db) {
-        const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
-        const transaction = db.transaction(objectName);
-        const objectStore = transaction.objectStore(objectName);
+        const transaction = db.transaction(resourceName);
+        const objectStore = transaction.objectStore(resourceName);
 
         const idbRequest = objectStore.openCursor();
         idbRequest.onerror = function (ev) {
           observer.error(ev);
         };
 
-        const result: EdDaoIObjectResource[] = [];
+        const result: PersistanceRawData[] = [];
         idbRequest.onsuccess = function (ev) {
           const cursor: IDBCursor = ev.target["result"];
           if (cursor) {
-            const newResource: EdDaoIObjectResource = new EdDaoUnknownObjectResource(null, this, objectName);
-            this.fillResourceWithIDBResult(newResource, cursor["value"]);
-            result.push(newResource);
+            const persistanceData: PersistanceRawData = {
+              resourceName: resourceName,
+              data: cursor["value"]
+            };
+            result.push(persistanceData);
             cursor.continue();
           } else {
-            resource.setResources(result);
-            observer.next(resource);
+            observer.next(result);
             observer.complete();
           }
         }.bind(this);
@@ -183,16 +156,16 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     }.bind(this));
   }
 
-  saveResources(resources: (EdDaoIObjectResource | EdDaoICollectionRessource)[]): Observable<any> {
+  saveResources(resources: PersistanceRawData[]): Observable<PersistanceRawData[]> {
     return Observable.create(function (observer) {
       const allResource$: Observable<any>[] = [];
       for (const resource of resources) {
-        if (resource.getMetaData().isMultival) {
-          for (const resourceFromMultival of (<EdDaoICollectionRessource>resource).getResources()) {
-            allResource$.push(this.saveResource(resourceFromMultival));
+        if (resource.data instanceof Array) {
+          for (const oneData of resource.data) {
+            allResource$.push(this.saveResource(resource.resourceName, oneData));
           }
         } else {
-          allResource$.push(this.saveResource(<EdDaoIObjectResource> resource));
+          allResource$.push(this.saveResource(resource.resourceName, resource.data));
         }
       }
       if (allResource$.length > 0) {
@@ -211,13 +184,13 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     }.bind(this));
   }
 
-  private saveResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource> {
+
+  private saveResource(resourceName: string, data: any): Observable<EdDaoIObjectResource> {
     return Observable.create(function(observer$) {
       this.whenConnectionOpened(function (db) {
-        const objectName = (<ObjectDef>resource.getMetaData().objectDef).objectName;
-        const transaction = db.transaction([objectName], "readwrite");
+        const transaction = db.transaction(resourceName, "readwrite");
         transaction.oncomplete = function () {
-          observer$.next(resource);
+          observer$.next(data);
           observer$.complete();
         };
         transaction.onerror = function (ev) {
@@ -226,23 +199,30 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         transaction.onabort = function (ev) {
           observer$.error(ev);
         };
-        const objectStore = transaction.objectStore(objectName);
+        const objectStore = transaction.objectStore(resourceName);
 
         let request: IDBRequest;
 
 
-        const newRecord = EdDaoAdapterUtils.instanceResourceToObject(resource);
-        const objectRadical = (<ObjectDef> resource.getMetaData().objectDef).radical;
-        if (resource.getID()) {
-          newRecord[objectRadical + "ID"] = EdDaoIndexedDBAdapter.parseID(newRecord[objectRadical + "ID"]);
-          request = objectStore.put(newRecord);
-        } else {
-          delete newRecord[objectRadical + "ID"];
-          request = objectStore.add(newRecord);
+        const objectRadical = DataDictionnary.getInstance().getObjectDefinition(resourceName).radical;
+        const fieldIDName = objectRadical + "ID";
+        if (!data[fieldIDName]) {
+          delete data[fieldIDName];
         }
+        request = objectStore.put(data);
         request.onsuccess = function (ev) {
-          const id: string = ev.target["result"];
-          resource.setID(id);
+          // replace data whithout losing memory pointer
+          const newData = ev.target["result"];
+          for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+              delete data[key];
+            }
+          }
+          for (const key in newData) {
+            if (newData.hasOwnProperty(key)) {
+              data[key] = newData[key];
+            }
+          }
         };
       }.bind(this));
     }.bind(this));
@@ -257,12 +237,13 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     return this.openConnectionRequest$;
   }
 
-  mapResourceFieldsToResultData(resourceName: string, applicationResource: { [key: string]: any; }): { [key: string]: any; } {
-    throw new Error('Method not implemented.');
+  mapPersistanceData2ApplicationData(persistanceResult: PersistanceRawData): ApplicationRawData {
+    return <ApplicationRawData> persistanceResult;
   }
 
-  mapResultDataToResourceFields(resourceName: string, persistanceResult: { [key: string]: any; }): { [key: string]: any; } {
-    throw new Error('Method not implemented.');
+  mapApplicationData2PersistanceData(applicationResource: ApplicationRawData): PersistanceRawData {
+    return <PersistanceRawData> applicationResource;
   }
+
 }
 

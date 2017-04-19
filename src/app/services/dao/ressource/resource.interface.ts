@@ -1,6 +1,7 @@
 
 import {Observable} from "rxjs/Observable";
 import {FieldDef} from "./datadictionary.impl";
+import {ApplicationRawData} from "../store/store.impl";
 
 export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIRessource {
   read(): Observable<EdDaoIObjectResource>;
@@ -19,9 +20,6 @@ export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIResso
 
   getID(): string;
   setID(id: string): void;
-
-  populateWithObject(object: any);
-  toObject(): any;
 }
 
 export interface EdDaoICollectionRessource extends EdIReadable, EdIWritable, EdIRessource {
@@ -33,10 +31,8 @@ export interface EdDaoICollectionRessource extends EdIReadable, EdIWritable, EdI
 
   readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource>;
   readNext(): Observable<EdDaoICollectionRessource>;
-  addResources(ids: string[]);
-
-  populateWithObject(object: any);
-  toObject(): any;
+  setIDs(ids: string[]);
+  getIDs(): string[];
 }
 
 export interface EdIPrimitiveRessource extends EdIRessource {

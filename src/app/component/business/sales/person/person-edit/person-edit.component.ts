@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {EdDaoRessourceFactory, EdDaoUnknownObjectResource} from "../../../../../services/dao/ressource/ressource.impl";
+import {EdDaoRessourceFactory, EdDaoUnknownObjectResource} from "../../../../../services/dao/ressource/resource.impl";
 import {Observable} from "rxjs/Observable";
 import {ActivatedRoute} from "@angular/router";
 

@@ -1,95 +1,67 @@
 
 import {SystemError} from "../../../common/error/errors";
-export class DataDictionnary {
 
+
+
+export interface ObjectDef {
+  name: string;
+  radical: string;
+  fields: {[fieldSqlName: string]: FieldDef};
+  nativeValidation?: any[];
+}
+
+export interface FieldDef {
+  type: FieldType;
+  name: string;
+  ownerObjectDef?: ObjectDef;
+  isMultival: boolean;
+  objectDef?: ObjectDef;
+  refCode?: string;
+}
+
+export enum FieldType {
+  STRING,
+  NUMBER,
+  DATE,
+  DATETIME,
+  RESOURCE,
+  REFERENTIEL
+}
+
+
+export class DataDictionnary {
   private static instance: DataDictionnary;
 
 
-  // Todo remove string object alias
-  // TODO add owner metadata instead of owner ownerObjectDef
-  private objectDefinitions: {[objectName: string]: ObjectDef} = {
-    "Person": {
-      objectName: "Person",
-      radical: "Per",
-      fields: {
-        "PerID": {
-          type: FieldType.STRING,
-          propertyName: "PerID",
-          ownerObjectDef: "Person",
-          isMultival: false
-        },
-        "PerFstName": {
-          type: FieldType.STRING,
-          propertyName: "PerFstName",
-          ownerObjectDef: "Person",
-          isMultival: false
-        },
-        "PerTitle": {
-          type: FieldType.STRING,
-          propertyName: "PerTitle",
-          ownerObjectDef: "Person",
-          isMultival: false
-        },
-        "PerName": {
-          type: FieldType.STRING,
-          propertyName: "PerName",
-          ownerObjectDef: "Person",
-          isMultival: false
-        },
-        "PerBestFriend": {
-          type: FieldType.RESOURCE,
-          propertyName: "PerBestFriend",
-          ownerObjectDef: "Person",
-          isMultival: false,
-          objectDef: "Person"
-        },
-        "PerOthersFriends": {
-          type: FieldType.RESOURCE,
-          propertyName: "PerOthersFriends",
-          ownerObjectDef: "Person",
-          isMultival: true,
-          objectDef: "Person"
-        }
-      }
-    },
-    "Company": {
-      objectName: "Company",
-      radical: "Com",
-      fields: {
-
-      }
-    }
-  };
-
-  private _fieldDefinitions: {[fieldName: string]: FieldDef} = {};
+  protected fieldDefinitions: {[fieldName: string]: FieldDef} = {};
 
   public static getInstance(): DataDictionnary {
     if (this.instance == null) {
-      this.instance = new DataDictionnary();
+      this.instance = MockDataDictionnary.getInstance();
     }
     return this.instance;
   }
 
-  constructor() {
+  constructor(private objectDefinitions?: {[objectName: string]: ObjectDef},
+                        private fieldDefsPerObjectName?: {[objectName: string]: {[fieldName: string]: FieldDef}}) {
+    this.fillFieldDefinition();
+  }
+
+  protected fillFieldDefinition() {
     for (const objectName in this.objectDefinitions) {
       if (this.objectDefinitions.hasOwnProperty(objectName)) {
+        const objectFields = this.fieldDefsPerObjectName[objectName];
         const objectDef = this.objectDefinitions[objectName];
-        this._fieldDefinitions = Object.assign(this._fieldDefinitions, objectDef.fields);
-        for (const fieldName in objectDef.fields) {
-          if (objectDef.fields.hasOwnProperty(fieldName)) {
-            const fieldDef = objectDef.fields[fieldName];
-            if (fieldDef.objectDef != null) {
-              fieldDef.objectDef = this.objectDefinitions[<string>fieldDef.objectDef];
-            }
-            if (fieldDef.ownerObjectDef != null) {
-              fieldDef.ownerObjectDef = this.objectDefinitions[<string>fieldDef.ownerObjectDef];
-            }
+        objectDef.fields = objectFields;
+
+        for (const fieldName in objectFields) {
+          if (objectFields.hasOwnProperty(fieldName)) {
+            this.fieldDefinitions[fieldName] = objectFields[fieldName];
           }
         }
       }
     }
   }
-
 
   public getObjectDefinition(objectName: string): ObjectDef {
     const result = this.getObjectDefinitions()[objectName];
@@ -101,7 +73,7 @@ export class DataDictionnary {
 
 
   public getFieldDefinition(fieldName: string): FieldDef {
-    const result = this._fieldDefinitions[fieldName];
+    const result = this.fieldDefinitions[fieldName];
     if (result == null) {
       throw new SystemError("Field not found " + fieldName, null, fieldName);
     }
@@ -114,28 +86,76 @@ export class DataDictionnary {
 }
 
 
-export interface ObjectDef {
-  objectName: string;
-  radical: string;
-  fields: {[fieldSqlName: string]: FieldDef};
-  nativeValidation?: any[];
+
+
+export class MockDataDictionnary {
+  private static instance: DataDictionnary;
+
+  private static mockObjectDefinitions: { [objectName: string]: ObjectDef } = {
+    "Person": {
+      name: "Person",
+      radical: "Per",
+      fields: {}
+    },
+    "Company": {
+      name: "Company",
+      radical: "Com",
+      fields: {}
+    }
+  };
+
+  private static mockFieldDefsPerObjectName: { [objectName: string]: { [fieldName: string]: FieldDef } } = {
+    "Person": {
+      "PerID": {
+        type: FieldType.STRING,
+        name: "PerID",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: false
+      },
+      "PerFstName": {
+        type: FieldType.STRING,
+        name: "PerFstName",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: false
+      },
+      "PerTitle": {
+        type: FieldType.STRING,
+        name: "PerTitle",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: false
+      },
+      "PerName": {
+        type: FieldType.STRING,
+        name: "PerName",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: false
+      },
+      "PerBestFriend": {
+        type: FieldType.RESOURCE,
+        name: "PerBestFriend",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: false,
+        objectDef: MockDataDictionnary.mockObjectDefinitions["Person"]
+      },
+      "PerOthersFriends": {
+        type: FieldType.RESOURCE,
+        name: "PerOthersFriends",
+        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
+        isMultival: true,
+        objectDef: MockDataDictionnary.mockObjectDefinitions["Person"]
+      }
+    },
+    "Company": {}
+  };
+
+
+  public static getInstance(): DataDictionnary {
+    if (this.instance == null) {
+      this.instance = new DataDictionnary(MockDataDictionnary.mockObjectDefinitions,
+        MockDataDictionnary.mockFieldDefsPerObjectName);
+    }
+    return this.instance;
+  }
 }
 
-export interface FieldDef {
-  type: FieldType;
-  propertyName: string;
-  ownerObjectDef?: (ObjectDef|string);
-  isMultival: boolean;
-  nativeValidation?: any[];
-  objectDef?: (ObjectDef|string);
-  refCode?: string;
-}
 
-export enum FieldType {
-  STRING,
-  NUMBER,
-  DATE,
-  DATETIME,
-  RESOURCE,
-  REFERENTIEL
-}

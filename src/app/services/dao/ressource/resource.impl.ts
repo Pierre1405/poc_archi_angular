@@ -5,9 +5,10 @@ import {
   EdDaoICollectionRessource, EdDaoIObjectResource, EdIPrimitiveRessource
 } from "./resource.interface";
 import {Injectable} from "@angular/core";
-import {DataDictionnary, FieldDef, FieldType, ObjectDef} from "./datadictionary.impl";
-import {EdDaoStore} from "../store/store.impl";
+import {DataDictionnary, FieldDef, FieldType} from "./datadictionary.impl";
+import {ApplicationRawData, EdDaoStore} from "../store/store.impl";
 import {EdDaoIStore} from "../store/store.interface";
+import {SystemError} from "../../../common/error/errors";
 
 export class EdDaoRessourceFactory {
 
@@ -39,7 +40,6 @@ export class EdDaoRessourceFactory {
 @Injectable()
 export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
 
-
   private _isRead = false;
   private attributes: Object = {};
   private metadata: FieldDef;
@@ -52,13 +52,6 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   }
 
 
-  populateWithObject(object: any) {
-    throw new Error('Method not implemented.');
-  }
-
-  toObject() {
-    throw new Error('Method not implemented.');
-  }
 
   public read(id?: string): Observable<EdDaoIObjectResource> {
     if (id) {
@@ -80,25 +73,35 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   }
 
   write(): Observable<EdDaoIObjectResource> {
-    throw new Error('Method not implemented.');
+    return Observable.create(function (observer) {
+      this.store.saveResources([this]).subscribe(function() {
+        observer.next(this);
+      },
+      function (error) {
+        observer.error(error);
+      },
+      function () {
+        observer.complete();
+      }.bind(this));
+    }.bind(this));
   }
 
   getProperty(field: string): EdIPrimitiveRessource {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(null, DataDictionnary.getInstance().getFieldDefinition(field));
+      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(null, field);
     }
     return this.attributes[field];
   }
 
   setProperty(field: string, value: any) {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(value, null);
+      this.attributes[field] = new EdDaoUnknowPrimitiveRessource(value, field);
     }
     const property: EdIPrimitiveRessource = this.attributes[field];
     property.setValue(value);
 
 
-    const objRadical = (<ObjectDef> this.getMetaData().objectDef).radical;
+    const objRadical = this.getMetaData().objectDef.radical;
     if (field === objRadical + "ID") {
       this.id = value;
     }
@@ -125,9 +128,14 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   }
 
   setID(id: string): void {
+    this.attributes = {};
     this.id = id;
-    const objRadical = (<ObjectDef> this.getMetaData().objectDef).radical;
+    const objRadical = this.getMetaData().objectDef.radical;
     this.setProperty(objRadical + "ID", id);
+    if (this.isRead()) {
+      this.setIsRead(false);
+      this.read();
+    }
   }
 
   getMetaData(): FieldDef {
@@ -164,6 +172,7 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
 @Injectable()
 export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource {
 
+
   private resources: EdDaoIObjectResource[] = [];
   private metaData: FieldDef;
 
@@ -177,19 +186,11 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
     this.ownerObjectID = ownerObjectID;
   }
 
-  populateWithObject(object: any) {
-    throw new Error('Method not implemented.');
-  }
-
-  toObject() {
-    throw new Error('Method not implemented.');
-  }
-
 
   read(): Observable<EdDaoICollectionRessource> {
     const filter = {};
-    if (this.ownerObjectID && this.getMetaData().propertyName) {
-      filter[this.getMetaData().propertyName] = this.ownerObjectID;
+    if (this.ownerObjectID && this.getMetaData().name) {
+      filter[this.getMetaData().name] = this.ownerObjectID;
     }
     return this.store.readCollection(this, filter, null, null);
   }
@@ -214,11 +215,24 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
     return this.resources;
   }
 
-  addResources(ids: string[]) {
+  setIDs(ids: string[]) {
+    this.setResources([]);
     for (const id of ids) {
       const newResource = new EdDaoUnknownObjectResource(id, this.store, this.getMetaData());
       this.getResources().push(newResource);
     }
+    if (this.isRead()) {
+      this.setIsRead(false);
+      this.read();
+    }
+  }
+
+  getIDs(): string[] {
+    const ids: string[] = [];
+    for (const resource of this.resources) {
+      ids.push(resource.getID());
+    }
+    return ids;
   }
 
   readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource> {
@@ -236,10 +250,10 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
 
 
 export class EdDaoUnknowPrimitiveRessource implements EdIPrimitiveRessource {
+  private metadata: FieldDef;
 
-  // TODO: metadata should be settable with fieldName
-  constructor (private value: any, private metadata: FieldDef) {
-
+  constructor (private value: any, fieldName: string) {
+    this.metadata = DataDictionnary.getInstance().getFieldDefinition(fieldName);
   }
 
   getValue() {
@@ -260,18 +274,30 @@ export class EdDaoUnknowPrimitiveRessource implements EdIPrimitiveRessource {
 class EdDaoResourceUtils {
 
   public static getMetadataForConstructor(metaDataOrObjectName: (FieldDef|string), isMultival: boolean): FieldDef {
-    let metaData: FieldDef = null;
+
+    if (!metaDataOrObjectName) {
+      throw new SystemError("metaDataOrObjectName is null or empty, it's not possible to retrieve metadata to create the resource");
+    }
+
+    let metaData: FieldDef;
     if (typeof metaDataOrObjectName === "string") {
       metaData = {
         ownerObjectDef: null,
         isMultival: isMultival,
-        propertyName: null,
+        name: null,
         type: FieldType.RESOURCE,
         objectDef: DataDictionnary.getInstance().getObjectDefinition(<string>metaDataOrObjectName)
 
       };
+      if (!metaData.objectDef) {
+        throw new SystemError("Field " + (<string>metaDataOrObjectName) + " is not an object, check if the field exist or if it's a primitive", null, metaDataOrObjectName);
+      }
     } else {
       metaData = <FieldDef>metaDataOrObjectName;
+
+      if (!metaData.objectDef) {
+        throw new SystemError("Field " + metaData.name + " is not an object", null, metaData);
+      }
     }
     return metaData;
   }
@@ -281,7 +307,7 @@ class EdDaoResourceUtils {
 
     result["id"] = resource.getID();
     if (resource.isRead()) {
-      const fieldDefs = (<ObjectDef> resource.getMetaData().objectDef).fields;
+      const fieldDefs = resource.getMetaData().objectDef.fields;
       for ( const fieldName in fieldDefs) {
         if (fieldDefs.hasOwnProperty(fieldName)) {
           const fieldDef = fieldDefs[fieldName];
