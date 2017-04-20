@@ -58,9 +58,6 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
       this.setID(id);
     }
     const observable = this.store.readResource(this);
-    observable.subscribe(function () {
-      this._isRead = true;
-    }.bind(this));
     return observable;
   }
 
@@ -76,7 +73,7 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
     return Observable.create(function (observer) {
       this.store.saveResources([this]).subscribe(function() {
         observer.next(this);
-      },
+      }.bind(this),
       function (error) {
         observer.error(error);
       },

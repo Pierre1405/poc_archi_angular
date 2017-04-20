@@ -115,7 +115,11 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
           observable.error(ev);
         };
         idbRequest.onsuccess = function () {
-          const result: any = idbRequest.result;
+          const result: PersistanceRawData = {
+            resourceName: resourceName,
+            data: idbRequest.result
+          };
+
           observable.next(result);
           observable.complete();
         }.bind(this);
@@ -162,10 +166,13 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
       for (const resource of resources) {
         if (resource.data instanceof Array) {
           for (const oneData of resource.data) {
-            allResource$.push(this.saveResource(resource.resourceName, oneData));
+            allResource$.push(this.saveResource({
+              resourceName: resource.resourceName,
+              data: oneData
+            }));
           }
         } else {
-          allResource$.push(this.saveResource(resource.resourceName, resource.data));
+          allResource$.push(this.saveResource(resource));
         }
       }
       if (allResource$.length > 0) {
@@ -185,44 +192,31 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
   }
 
 
-  private saveResource(resourceName: string, data: any): Observable<EdDaoIObjectResource> {
+  private saveResource(persistanceRawData: PersistanceRawData): Observable<PersistanceRawData> {
     return Observable.create(function(observer$) {
       this.whenConnectionOpened(function (db) {
-        const transaction = db.transaction(resourceName, "readwrite");
-        transaction.oncomplete = function () {
-          observer$.next(data);
-          observer$.complete();
-        };
+        const transaction = db.transaction(persistanceRawData.resourceName, "readwrite");
         transaction.onerror = function (ev) {
           observer$.error(ev);
         };
         transaction.onabort = function (ev) {
           observer$.error(ev);
         };
-        const objectStore = transaction.objectStore(resourceName);
+        const objectStore = transaction.objectStore(persistanceRawData.resourceName);
 
         let request: IDBRequest;
 
 
-        const objectRadical = DataDictionnary.getInstance().getObjectDefinition(resourceName).radical;
+        const objectRadical = DataDictionnary.getInstance().getObjectDefinition(persistanceRawData.resourceName).radical;
         const fieldIDName = objectRadical + "ID";
-        if (!data[fieldIDName]) {
-          delete data[fieldIDName];
+        if (!persistanceRawData.data[fieldIDName]) {
+          delete persistanceRawData.data[fieldIDName];
         }
-        request = objectStore.put(data);
+        request = objectStore.put(persistanceRawData.data);
         request.onsuccess = function (ev) {
-          // replace data whithout losing memory pointer
-          const newData = ev.target["result"];
-          for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-              delete data[key];
-            }
-          }
-          for (const key in newData) {
-            if (newData.hasOwnProperty(key)) {
-              data[key] = newData[key];
-            }
-          }
+          persistanceRawData.data[fieldIDName] = ev.target["result"];
+          observer$.next(persistanceRawData);
+          observer$.complete();
         };
       }.bind(this));
     }.bind(this));

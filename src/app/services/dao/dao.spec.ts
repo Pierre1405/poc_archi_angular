@@ -7,14 +7,25 @@ describe("Test dao", function () {
 
   DataDictionnary.getInstance = MockDataDictionnary.getInstance;
   it("should create object resource", function (done) {
+    debugger;
     const resource = EdDaoRessourceFactory.getInstance().getResource("Person", null);
     resource.setProperty("PerName", "Pierre");
+    expect(resource.isRead()).not.toBeTruthy();
     resource.write().subscribe(
-      function () {
+      function (resourcesFromObservable) {
+        expect(resource.getID()).toBeTruthy();
+        expect(resource.getID()).toBe(resourcesFromObservable.getID());
+        expect(resource.isRead()).toBeTruthy();
+        expect(resourcesFromObservable.isRead()).toBeTruthy();
 
         const justSavedID = resource.getID();
-        console.log(justSavedID);
-        done();
+        const justSavedPerson = EdDaoRessourceFactory.getInstance().getResource("Person", justSavedID);
+        justSavedPerson.read().subscribe(function (loadPerson) {
+          expect(loadPerson.getProperty("PerName").getValue()).toBe("Pierre");
+          done();
+        }, function (error) {
+          fail(error);
+        });
       }
     );
   });

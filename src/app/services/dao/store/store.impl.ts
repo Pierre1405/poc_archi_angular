@@ -37,11 +37,12 @@ export class EdDaoStore implements EdDaoIStore {
   readResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource> {
     return Observable.create( function (observer) {
       // read resource from persistence adapter
-      const persistance$ = this.adapter.readResource(resource.getID(), resource.getMetaData().objectDef.name);
+      const resourceName = resource.getMetaData().objectDef.name;
+      const persistance$ = this.adapter.readResource(resource.getID(), resourceName);
 
       // When it's done translate persistence data to populate application resource
-      persistance$.subscribe((data) => {
-        this.populateObjectResourceWithRawData(resource, this.adapter.mapPersistanceData2ApplicationData(data));
+      persistance$.subscribe((persistanceRawData) => {
+        this.populateObjectResourceWithRawData(resource, this.adapter.mapPersistanceData2ApplicationData(persistanceRawData));
         observer.next(resource);
       }, (error) => {
         observer.error(error);
@@ -94,7 +95,7 @@ export class EdDaoStore implements EdDaoIStore {
               this.populateObjectResourceWithRawData(resources[i], this.adapter.mapPersistanceData2ApplicationData(persistanceRawData[i]));
             }
           }
-          observer.next();
+          observer.next(resources);
         }.bind(this),
         function() {
 
@@ -151,6 +152,7 @@ export class EdDaoStore implements EdDaoIStore {
         this.populateObjectResourcePropertyWithRawData(resource, fieldName, rawData.data[fieldName]);
       }
     }
+    resource.setIsRead(true);
   }
 
 
