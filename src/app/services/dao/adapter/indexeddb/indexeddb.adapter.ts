@@ -1,13 +1,11 @@
 
 
 import {EdIAdapter} from "../adapter.interface";
-import {EdDaoIObjectResource} from "../../ressource/resource.interface";
 import {DataDictionnary} from "../../ressource/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
 import {Observable} from "rxjs";
 import {ApplicationRawData, PersistanceRawData} from "../../store/store.impl";
-import {resource} from "selenium-webdriver/http";
 
 export class EdDaoIndexedDBAdapter implements EdIAdapter {
 
@@ -26,7 +24,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     for (const objectName in instance.getObjectDefinitions()) {
       if (instance.getObjectDefinitions().hasOwnProperty(objectName)) {
         const objectDef = instance.getObjectDefinitions()[objectName];
-        db.createObjectStore(objectDef.name, {keyPath: objectDef.radical + "ID", autoIncrement: true});
+        db.createObjectStore(objectDef.name, {keyPath: objectDef.fieldID, autoIncrement: true});
       }
     }
   }
@@ -74,30 +72,32 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
 
   public clearAllTables(): Observable<any> {
     return Observable.create(function (observer) {
-      const clearTableObservable: Observable<IDBObjectStore>[] = [];
-      for (let i = 0; i < this.db.objectStoreNames.length; i++) {
-        clearTableObservable.push(Observable.create(function (clearTableObserver) {
-          const objectName = this.db.objectStoreNames[i];
-          const transaction = this.db.transaction(objectName, "readwrite");
-          const objectStore = transaction.objectStore(objectName);
+      this.whenConnectionOpened(function () {
+        const clearTableObservable: Observable<IDBObjectStore>[] = [];
+        for (let i = 0; i < this.db.objectStoreNames.length; i++) {
+          clearTableObservable.push(Observable.create(function (clearTableObserver) {
+            const objectName = this.db.objectStoreNames[i];
+            const transaction = this.db.transaction(objectName, "readwrite");
+            const objectStore = transaction.objectStore(objectName);
 
-          const idbRequest = objectStore.clear();
-          idbRequest.onerror = function() {
-            clearTableObserver.error();
-          };
-          idbRequest.onsuccess = function() {
-            clearTableObserver.next(objectStore);
-            clearTableObserver.complete();
-          };
-        }.bind(this)));
-      }
-      Observable.merge.apply(Observable, clearTableObservable).subscribe(function(v) {
-        observer.next(v);
-      }, function(error) {
-        observer.error(error);
-      }, function() {
-        observer.complete();
-      });
+            const idbRequest = objectStore.clear();
+            idbRequest.onerror = function() {
+              clearTableObserver.error();
+            };
+            idbRequest.onsuccess = function() {
+              clearTableObserver.next(objectStore);
+              clearTableObserver.complete();
+            };
+          }.bind(this)));
+        }
+        Observable.merge.apply(Observable, clearTableObservable).subscribe(function(v) {
+          observer.next(v);
+        }, function(error) {
+          observer.error(error);
+        }, function() {
+          observer.complete();
+        });
+      }.bind(this));
     }.bind(this));
   }
 
@@ -207,8 +207,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         let request: IDBRequest;
 
 
-        const objectRadical = DataDictionnary.getInstance().getObjectDefinition(persistanceRawData.resourceName).radical;
-        const fieldIDName = objectRadical + "ID";
+        const fieldIDName = DataDictionnary.getInstance().getObjectDefinition(persistanceRawData.resourceName).fieldID;
         if (!persistanceRawData.data[fieldIDName]) {
           delete persistanceRawData.data[fieldIDName];
         }
@@ -220,6 +219,10 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         };
       }.bind(this));
     }.bind(this));
+  }
+
+  deleteResources(): Observable<any> {
+    throw new Error('Method not implemented.');
   }
 
   private whenConnectionOpened(handler) {

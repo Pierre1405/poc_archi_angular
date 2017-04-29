@@ -12,6 +12,9 @@ export interface EdIAdapter {
     Observable<PersistanceRawData[]>;
 
   saveResources(resources: PersistanceRawData[]): Observable<PersistanceRawData[]>;
+
+  deleteResources(): Observable<any>;
+
   /**
    * Implement this method to adapt persistence data format to resource expected data format
    * i.e. timestamp to string, number id to string id, etc...

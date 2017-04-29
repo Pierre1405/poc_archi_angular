@@ -4,8 +4,9 @@ import {FieldDef} from "./datadictionary.impl";
 import {ApplicationRawData} from "../store/store.impl";
 
 export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIRessource {
-  read(): Observable<EdDaoIObjectResource>;
+  read(id?: string): Observable<EdDaoIObjectResource>;
   write(): Observable<EdDaoIObjectResource>;
+  deleteId(): Observable<any>;
 
   getProperty(field: string): EdIPrimitiveRessource;
   setProperty(field: string, value: any);
@@ -25,6 +26,7 @@ export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIResso
 export interface EdDaoICollectionRessource extends EdIReadable, EdIWritable, EdIRessource {
   read(): Observable<EdDaoICollectionRessource>;
   write(): Observable<EdDaoICollectionRessource>;
+  deleteThem(filter?: any): Observable<any>;
 
   setResources(resources: EdDaoIObjectResource[]);
   getResources(): EdDaoIObjectResource[];

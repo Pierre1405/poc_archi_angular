@@ -21,12 +21,11 @@ export class EdDaoRessourceFactory {
   }
 
   constructor() {
-    // this.store = new EdFakeStore();
     this.store = EdDaoStore.getInstance();
   }
 
-  public getResource(type: string, id: string): EdDaoIObjectResource {
-    return new EdDaoUnknownObjectResource(id, this.store, type);
+  public getResource(type: string): EdDaoIObjectResource {
+    return new EdDaoUnknownObjectResource(this.store, type);
   }
 
   public getCollectionRessource(type: string): EdDaoICollectionRessource {
@@ -46,9 +45,8 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   private id: string;
 
 
-  constructor(id: string, private store: EdDaoIStore, metaDataOrObjectName: (FieldDef|string)) {
+  constructor(private store: EdDaoIStore, metaDataOrObjectName: (FieldDef|string)) {
     this.metadata = EdDaoResourceUtils.getMetadataForConstructor(metaDataOrObjectName, false);
-    this.setID(id);
   }
 
 
@@ -98,8 +96,8 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
     property.setValue(value);
 
 
-    const objRadical = this.getMetaData().objectDef.radical;
-    if (field === objRadical + "ID") {
+    const fieldIDName = this.getMetaData().objectDef.fieldID;
+    if (field === fieldIDName) {
       this.id = value;
     }
   }
@@ -110,13 +108,14 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
 
   getResource(field: string): EdDaoIObjectResource {
     if (!this.attributes.hasOwnProperty(field)) {
-      this.attributes[field] = new EdDaoUnknownObjectResource(null, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
+      this.attributes[field] = new EdDaoUnknownObjectResource(this.store, DataDictionnary.getInstance().getFieldDefinition(field));
     }
     return this.attributes[field];
   }
 
   setResource(field: string, id) {
-    this.attributes[field] = new EdDaoUnknownObjectResource(id, this.store, DataDictionnary.getInstance().getFieldDefinition(field));
+    this.attributes[field] = new EdDaoUnknownObjectResource(this.store, DataDictionnary.getInstance().getFieldDefinition(field));
+    this.attributes[field].setID(id);
   }
 
 
@@ -127,8 +126,8 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   setID(id: string): void {
     this.attributes = {};
     this.id = id;
-    const objRadical = this.getMetaData().objectDef.radical;
-    this.setProperty(objRadical + "ID", id);
+    const fieldIDName = this.getMetaData().objectDef.fieldID;
+    this.setProperty(fieldIDName, id);
     if (this.isRead()) {
       this.setIsRead(false);
       this.read();
@@ -163,11 +162,17 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
   public toNonCircularObjectForJSON(): any {
     return EdDaoResourceUtils.getNonCircularResourceForJson(this);
   }
+
+
+  deleteId(): Observable<any> {
+    throw new Error("Unimplemented method");
+  }
 }
 
 
 @Injectable()
 export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource {
+
 
 
   private resources: EdDaoIObjectResource[] = [];
@@ -204,6 +209,10 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
     throw new Error('Method not implemented.');
   }
 
+  deleteThem(filter?: any): Observable<any> {
+    throw new Error('Method not implemented.');
+  }
+
   setResources(resources: EdDaoIObjectResource[]) {
     this.resources = resources;
   }
@@ -215,7 +224,8 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
   setIDs(ids: string[]) {
     this.setResources([]);
     for (const id of ids) {
-      const newResource = new EdDaoUnknownObjectResource(id, this.store, this.getMetaData());
+      const newResource = new EdDaoUnknownObjectResource(this.store, this.getMetaData());
+      newResource.setID(id);
       this.getResources().push(newResource);
     }
     if (this.isRead()) {
@@ -284,10 +294,10 @@ class EdDaoResourceUtils {
         name: null,
         type: FieldType.RESOURCE,
         objectDef: DataDictionnary.getInstance().getObjectDefinition(<string>metaDataOrObjectName)
-
       };
       if (!metaData.objectDef) {
-        throw new SystemError("Field " + (<string>metaDataOrObjectName) + " is not an object, check if the field exist or if it's a primitive", null, metaDataOrObjectName);
+        throw new SystemError("Field " + (<string>metaDataOrObjectName) +
+          " is not an object, check if the field exist or if it's a primitive", null, metaDataOrObjectName);
       }
     } else {
       metaData = <FieldDef>metaDataOrObjectName;

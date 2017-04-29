@@ -6,7 +6,7 @@ import {ActivatedRoute} from "@angular/router";
 const personProvider = {
   provide: EdDaoUnknownObjectResource,
   useFactory: () => {
-    return EdDaoRessourceFactory.getInstance().getResource("Person", null);
+    return EdDaoRessourceFactory.getInstance().getResource("Person");
   }
 };
 

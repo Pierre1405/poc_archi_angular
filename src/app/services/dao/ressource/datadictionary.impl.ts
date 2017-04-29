@@ -5,9 +5,9 @@ import {SystemError} from "../../../common/error/errors";
 
 export interface ObjectDef {
   name: string;
-  radical: string;
+  fieldID: string;
   fields: {[fieldSqlName: string]: FieldDef};
-  nativeValidation?: any[];
+  validation?: any[];
 }
 
 export interface FieldDef {
@@ -16,7 +16,6 @@ export interface FieldDef {
   ownerObjectDef?: ObjectDef;
   isMultival: boolean;
   objectDef?: ObjectDef;
-  refCode?: string;
 }
 
 export enum FieldType {
@@ -24,8 +23,7 @@ export enum FieldType {
   NUMBER,
   DATE,
   DATETIME,
-  RESOURCE,
-  REFERENTIEL
+  RESOURCE
 }
 
 
@@ -94,12 +92,12 @@ export class MockDataDictionnary {
   private static mockObjectDefinitions: { [objectName: string]: ObjectDef } = {
     "Person": {
       name: "Person",
-      radical: "Per",
+      fieldID: "PerID",
       fields: {}
     },
     "Company": {
       name: "Company",
-      radical: "Com",
+      fieldID: "ComID",
       fields: {}
     }
   };
