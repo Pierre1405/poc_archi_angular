@@ -144,14 +144,18 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         idbRequest.onsuccess = function (ev) {
           const cursor: IDBCursor = ev.target["result"];
           if (cursor) {
-            const persistanceData: PersistanceRawData = {
+            const objectPersistanceData: PersistanceRawData = {
               resourceName: resourceName,
               data: cursor["value"]
             };
-            result.push(persistanceData);
+            result.push(objectPersistanceData);
             cursor.continue();
           } else {
-            observer.next(result);
+            const collectionPersitanceData: PersistanceRawData = {
+              resourceName: resourceName,
+              data: result
+            };
+            observer.next(collectionPersitanceData);
             observer.complete();
           }
         }.bind(this);
@@ -166,10 +170,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
       for (const resource of resources) {
         if (resource.data instanceof Array) {
           for (const oneData of resource.data) {
-            allResource$.push(this.saveResource({
-              resourceName: resource.resourceName,
-              data: oneData
-            }));
+            allResource$.push(this.saveResource(oneData));
           }
         } else {
           allResource$.push(this.saveResource(resource));
@@ -195,6 +196,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
   private saveResource(persistanceRawData: PersistanceRawData): Observable<PersistanceRawData> {
     return Observable.create(function(observer$) {
       this.whenConnectionOpened(function (db) {
+
         const transaction = db.transaction(persistanceRawData.resourceName, "readwrite");
         transaction.onerror = function (ev) {
           observer$.error(ev);

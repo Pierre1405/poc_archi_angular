@@ -4,18 +4,19 @@ import {EdDaoIndexedDBAdapter} from "../adapter/indexeddb/indexeddb.adapter";
 import {EdIAdapter} from "../adapter/adapter.interface";
 import {EdDaoIStore} from "./store.interface";
 import {FieldType} from "../ressource/datadictionary.impl";
+import {EdDaoRessourceFactory, EdDaoUnknownObjectResource} from "../ressource/resource.impl";
 
-export interface RawData {
+export interface RawValues {
   [fieldName: string]: any;
 }
 
 export interface ApplicationRawData {
   resourceName: string;
-  data: (RawData|RawData[]);
+  data: (RawValues|ApplicationRawData[]);
 }
 export interface PersistanceRawData {
   resourceName: string;
-  data: (RawData|RawData[]);
+  data: (RawValues|PersistanceRawData[]);
 }
 
 // TODO Implement cache
@@ -59,10 +60,10 @@ export class EdDaoStore implements EdDaoIStore {
       const persistance$ = this.adapter.readCollection(collection.getMetaData().objectDef.name, filter, order, pagination);
 
       // When it's done translate persistence data to populate application resource
-      persistance$.subscribe((persistenceData) => {
+      persistance$.subscribe(function (persistenceData) {
         this.populateObjectCollectionWithRawData(collection, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
         observer.next();
-      }, (error) => {
+      }.bind(this), (error) => {
         observer.error(error);
       }, () => {
         observer.complete();
@@ -87,20 +88,27 @@ export class EdDaoStore implements EdDaoIStore {
 
       this.adapter.saveResources(persistanceRawData).subscribe(
         function() {
-          for (let i = 0; i < persistanceRawData.length && i < resources.length; i++) {
-            if (resources[i].getMetaData().isMultival) {
-              this.populateCollectionResourceWithMetaData(resources[i],
+          try {
+            for (let i = 0; i < persistanceRawData.length && i < resources.length; i++) {
+              if (resources[i].getMetaData().isMultival) {
+                this.populateObjectCollectionWithRawData(resources[i],
                   this.adapter.mapPersistanceData2ApplicationData(persistanceRawData[i]));
-            } else {
-              this.populateObjectResourceWithRawData(resources[i], this.adapter.mapPersistanceData2ApplicationData(persistanceRawData[i]));
+              } else {
+                this.populateObjectResourceWithRawData(resources[i],
+                  this.adapter.mapPersistanceData2ApplicationData(persistanceRawData[i]));
+              }
             }
+            observer.next(resources);
+          } catch (e) {
+            console.error(e);
+            observer.error(e);
           }
-          observer.next(resources);
         }.bind(this),
-        function() {
-
+        function(error) {
+          observer.error(error);
         },
         function () {
+          observer.complete();
           console.log("complete", persistanceRawData);
         }
       );
@@ -129,10 +137,6 @@ export class EdDaoStore implements EdDaoIStore {
     return applicationRawData;
   }
 
-  collectionResourcetoRawData(collection: EdDaoICollectionRessource): ApplicationRawData {
-    throw new Error("Method not implemented");
-  }
-
   private populateObjectResourcePropertyWithRawData(resource: EdDaoIObjectResource, propertyName: string, data: any) {
     const objectDef = resource.getMetaData().objectDef;
     const fieldDef = objectDef.fields[propertyName];
@@ -155,8 +159,27 @@ export class EdDaoStore implements EdDaoIStore {
     resource.setIsRead(true);
   }
 
+  populateObjectCollectionWithRawData(collection: EdDaoICollectionRessource, rawData: ApplicationRawData) {
+    const objectRawDatas: ApplicationRawData[] = <ApplicationRawData[]> rawData.data;
+    const newCollectionResource: EdDaoIObjectResource[] = [];
+    const resourceName: string = collection.getMetaData().objectDef.name;
+    for (const objectRawData of objectRawDatas) {
+      const objectResource = EdDaoRessourceFactory.getInstance().getResource(resourceName);
+      this.populateObjectResourceWithRawData(objectResource, objectRawData);
+      newCollectionResource.push(objectResource);
+    }
+    collection.setResources(newCollectionResource);
+    collection.setIsRead(true);
+  }
 
-  populateObjectCollectionWithRawData(collection: EdDaoIObjectResource, rawData: ApplicationRawData) {
-    throw new Error("Method not implement");
+  collectionResourcetoRawData(collection: EdDaoICollectionRessource): ApplicationRawData {
+    const result: ApplicationRawData = {
+      resourceName: collection.getMetaData().objectDef.name,
+        data: []
+    };
+    for (const objectResource of collection.getResources()) {
+      (<RawValues[]> result.data).push(this.objectResourcetoRawData(objectResource));
+    }
+    return result;
   }
 }

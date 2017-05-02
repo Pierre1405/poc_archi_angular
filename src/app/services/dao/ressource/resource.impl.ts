@@ -206,7 +206,17 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
   }
 
   write(): Observable<EdDaoICollectionRessource> {
-    throw new Error('Method not implemented.');
+    return Observable.create(function (observer) {
+      this.store.saveResources([this]).subscribe(function() {
+          observer.next(this);
+        }.bind(this),
+        function (error) {
+          observer.error(error);
+        },
+        function () {
+          observer.complete();
+        }.bind(this));
+    }.bind(this));
   }
 
   deleteThem(filter?: any): Observable<any> {

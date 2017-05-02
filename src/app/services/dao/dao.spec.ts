@@ -23,7 +23,6 @@ describe("Test dao", function () {
   });
 
   it("should create object resource", function (done) {
-    debugger;
     const resource = EdDaoRessourceFactory.getInstance().getResource("Person");
     resource.setProperty("PerName", "Pierre");
     expect(resource.isRead()).not.toBeTruthy();
@@ -61,9 +60,9 @@ describe("Test dao", function () {
       function (theJustSavedCollection) {
         const assertCollectionRessource = function (collection: EdDaoICollectionRessource) {
           expect(collection.getResources()[0].getID()).toBeTruthy();
-          expect(collection.getResources()[0].getProperty("PerName")).toBe("Test1");
+          expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
           expect(collection.getResources()[1].getID()).toBeTruthy();
-          expect(collection.getResources()[1].getProperty("PerName")).toBe("Test2");
+          expect(collection.getResources()[1].getProperty("PerName").getValue()).toBe("Test2");
           expect(collection.isRead()).not.toBeTruthy();
           expect(collection.getResources()[0].isRead()).not.toBeTruthy();
           expect(collection.getResources()[1].isRead()).not.toBeTruthy();
@@ -99,8 +98,6 @@ describe("Test dao", function () {
   });
 
   it("should update object resource", function () {
-    const resource = EdDaoRessourceFactory.getInstance().getResource("Person");
-    resource.write().subscribe();
   });
 
   it("should update collection resource", function () {
