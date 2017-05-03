@@ -3,8 +3,8 @@ import {Observable} from "rxjs/Observable";
 import {EdDaoIndexedDBAdapter} from "../adapter/indexeddb/indexeddb.adapter";
 import {EdIAdapter} from "../adapter/adapter.interface";
 import {EdDaoIStore} from "./store.interface";
-import {FieldType} from "../ressource/datadictionary.impl";
-import {EdDaoRessourceFactory, EdDaoUnknownObjectResource} from "../ressource/resource.impl";
+import {EdDaoRessourceFactory} from "../ressource/resource.impl";
+import {FieldType} from "../datadictionnary/conf.interface";
 
 export interface RawValues {
   [fieldName: string]: any;

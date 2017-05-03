@@ -3,10 +3,8 @@ import {async, ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/t
 import { EdFormTextInputComponent } from './ed-form-text-input-component.component';
 import {FormsModule} from "@angular/forms";
 import {
-  EdDaoRessourceFactory, EdDaoUnknownObjectResource,
   EdDaoUnknowPrimitiveRessource
 } from "../../../../services/dao/ressource/resource.impl";
-import {DataDictionnary, FieldType} from "../../../../services/dao/ressource/datadictionary.impl";
 
 describe('EdFormTextInputComponent', () => {
   let component: EdFormTextInputComponent;

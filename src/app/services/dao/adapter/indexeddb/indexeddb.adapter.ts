@@ -1,7 +1,7 @@
 
 
 import {EdIAdapter} from "../adapter.interface";
-import {DataDictionnary} from "../../ressource/datadictionary.impl";
+import {DataDictionnary} from "../../datadictionnary/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
 import {Observable} from "rxjs";

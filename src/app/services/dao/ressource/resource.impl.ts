@@ -5,10 +5,10 @@ import {
   EdDaoICollectionRessource, EdDaoIObjectResource, EdIPrimitiveRessource
 } from "./resource.interface";
 import {Injectable} from "@angular/core";
-import {DataDictionnary, FieldDef, FieldType} from "./datadictionary.impl";
-import {ApplicationRawData, EdDaoStore} from "../store/store.impl";
+import {DataDictionnary} from "../datadictionnary/datadictionary.impl";
 import {EdDaoIStore} from "../store/store.interface";
 import {SystemError} from "../../../common/error/errors";
+import {FieldDef, FieldType} from "../datadictionnary/conf.interface";
 
 export class EdDaoRessourceFactory {
 
@@ -55,8 +55,7 @@ export class EdDaoUnknownObjectResource implements EdDaoIObjectResource {
     if (id) {
       this.setID(id);
     }
-    const observable = this.store.readResource(this);
-    return observable;
+    return this.store.readResource(this);
   }
 
   isRead(): boolean {

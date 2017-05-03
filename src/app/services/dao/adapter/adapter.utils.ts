@@ -1,6 +1,8 @@
 
 import {EdDaoIObjectResource} from "../ressource/resource.interface";
-import {DataDictionnary, FieldType, ObjectDef} from "../ressource/datadictionary.impl";
+import {DataDictionnary} from "../datadictionnary/datadictionary.impl";
+import {FieldType} from "../datadictionnary/conf.interface";
+//noinspection JSUnusedGlobalSymbols
 export class EdDaoAdapterUtils {
   public static instanceResourceToObject(resource: EdDaoIObjectResource): any {
     const result = {};

@@ -1,10 +1,12 @@
 import {EdDaoRessourceFactory} from "./ressource/resource.impl";
-import {DataDictionnary, MockDataDictionnary} from "./ressource/datadictionary.impl";
+import {
+  DataDictionnary
+} from "./datadictionnary/datadictionary.impl";
 import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
 import {EdDaoICollectionRessource} from "./ressource/resource.interface";
-/**
- * Created by root on 19/04/17.
- */
+import {MockDataDictionnary} from "./mock.spec";
+
+
 describe("Test dao", function () {
   DataDictionnary.getInstance = MockDataDictionnary.getInstance;
 

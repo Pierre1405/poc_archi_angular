@@ -1,7 +1,6 @@
 
 import {Observable} from "rxjs/Observable";
-import {FieldDef} from "./datadictionary.impl";
-import {ApplicationRawData} from "../store/store.impl";
+import {FieldDef} from "../datadictionnary/conf.interface";
 
 export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIRessource {
   read(id?: string): Observable<EdDaoIObjectResource>;
