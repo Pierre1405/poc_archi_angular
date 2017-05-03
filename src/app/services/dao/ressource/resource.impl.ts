@@ -9,6 +9,7 @@ import {DataDictionnary} from "../datadictionnary/datadictionary.impl";
 import {EdDaoIStore} from "../store/store.interface";
 import {SystemError} from "../../../common/error/errors";
 import {FieldDef, FieldType} from "../datadictionnary/conf.interface";
+import {EdDaoStore} from "../store/store.impl";
 
 export class EdDaoRessourceFactory {
 
