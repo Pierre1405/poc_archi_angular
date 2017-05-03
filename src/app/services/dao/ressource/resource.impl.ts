@@ -299,7 +299,6 @@ class EdDaoResourceUtils {
     let metaData: FieldDef;
     if (typeof metaDataOrObjectName === "string") {
       metaData = {
-        ownerObjectDef: null,
         isMultival: isMultival,
         name: null,
         type: FieldType.RESOURCE,

@@ -1,3 +1,25 @@
+import {EdIAdapter} from "../adapter/adapter.interface";
+import {FieldAdapter} from "../store/store.interface";
+export interface DaoDef {
+  dico: DicoDef,
+  storeRegistry: StoreRegistryDef
+}
+
+export interface DicoDef {
+  [objectName: string]: ObjectDef
+}
+
+export interface StoreRegistryDef {
+  [objectName: string]: [StoreDef]
+}
+
+export interface StoreDef {
+  isDefault?: boolean,
+  name: String,
+  adapter: EdIAdapter,
+  fieldAdapter?: FieldAdapter
+}
+
 export interface ObjectDef {
   name: string;
   fieldID: string;
@@ -8,7 +30,6 @@ export interface ObjectDef {
 export interface FieldDef {
   type: FieldType;
   name: string;
-  ownerObjectDef?: ObjectDef;
   isMultival: boolean;
   objectDef?: ObjectDef;
 }

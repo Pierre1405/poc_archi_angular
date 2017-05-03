@@ -7,3 +7,9 @@ export interface EdDaoIStore {
   saveResources(resources: (EdDaoIObjectResource|EdDaoICollectionRessource)[]):
                               Observable<(EdDaoIObjectResource|EdDaoICollectionRessource)[]>;
 }
+
+
+export interface FieldAdapter  {
+  persistanceToApplication (rawData: any): any;
+  applicationToPersistance (rawData: any): any;
+}

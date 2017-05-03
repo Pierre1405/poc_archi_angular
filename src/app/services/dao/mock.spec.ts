@@ -23,38 +23,32 @@ export class MockDataDictionnary {
       "PerID": {
         type: FieldType.STRING,
         name: "PerID",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: false
       },
       "PerFstName": {
         type: FieldType.STRING,
         name: "PerFstName",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: false
       },
       "PerTitle": {
         type: FieldType.STRING,
         name: "PerTitle",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: false
       },
       "PerName": {
         type: FieldType.STRING,
         name: "PerName",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: false
       },
       "PerBestFriend": {
         type: FieldType.RESOURCE,
         name: "PerBestFriend",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: false,
         objectDef: MockDataDictionnary.mockObjectDefinitions["Person"]
       },
       "PerOthersFriends": {
         type: FieldType.RESOURCE,
         name: "PerOthersFriends",
-        ownerObjectDef: MockDataDictionnary.mockObjectDefinitions["Person"],
         isMultival: true,
         objectDef: MockDataDictionnary.mockObjectDefinitions["Person"]
       }
