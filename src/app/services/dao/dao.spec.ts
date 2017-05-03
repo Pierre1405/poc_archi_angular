@@ -47,7 +47,6 @@ describe("Test dao", function () {
     );
   });
   it("should create collection resource", function (done) {
-    debugger;
     const resource1 = EdDaoRessourceFactory.getInstance().getResource("Person");
     resource1.setProperty("PerName", "Test1");
     const resource2 = EdDaoRessourceFactory.getInstance().getResource("Person");
@@ -55,9 +54,10 @@ describe("Test dao", function () {
     const collectionRessourceCreation = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
     collectionRessourceCreation.getResources().push(resource1);
     collectionRessourceCreation.getResources().push(resource2);
-    expect(collectionRessourceCreation.isRead()).not.toBeTruthy();
-    expect(collectionRessourceCreation.getResources()[0].isRead()).not.toBeTruthy();
-    expect(collectionRessourceCreation.getResources()[1].isRead()).not.toBeTruthy();
+    expect(collectionRessourceCreation.isRead()).not.toBeTruthy("Collection shouldn't be read");
+    expect(collectionRessourceCreation.getResources()[0].isRead()).not.toBeTruthy("Collection item 1 shouldn't be read");
+    expect(collectionRessourceCreation.getResources()[1].isRead()).not.toBeTruthy("Collection item 2 shouldn't be read");
+    debugger;
     collectionRessourceCreation.write().subscribe(
       function (theJustSavedCollection) {
         const assertCollectionRessource = function (collection: EdDaoICollectionRessource) {
@@ -65,10 +65,11 @@ describe("Test dao", function () {
           expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
           expect(collection.getResources()[1].getID()).toBeTruthy();
           expect(collection.getResources()[1].getProperty("PerName").getValue()).toBe("Test2");
-          expect(collection.isRead()).not.toBeTruthy();
-          expect(collection.getResources()[0].isRead()).not.toBeTruthy();
-          expect(collection.getResources()[1].isRead()).not.toBeTruthy();
+          expect(collection.isRead()).toBeTruthy("Collection should be read");
+          expect(collection.getResources()[0].isRead()).toBeTruthy("Collection item 1 should be read");
+          expect(collection.getResources()[1].isRead()).toBeTruthy("Collection item 2 should be read");
         };
+
         assertCollectionRessource(collectionRessourceCreation);
         assertCollectionRessource(theJustSavedCollection);
         const collectionRessourceLoadAfterCreation = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");

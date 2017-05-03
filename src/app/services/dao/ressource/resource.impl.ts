@@ -208,12 +208,12 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
   write(): Observable<EdDaoICollectionRessource> {
     return Observable.create(function (observer) {
       this.store.saveResources([this]).subscribe(function() {
-          observer.next(this);
         }.bind(this),
         function (error) {
           observer.error(error);
         },
         function () {
+          observer.next(this);
           observer.complete();
         }.bind(this));
     }.bind(this));
