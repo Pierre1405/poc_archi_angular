@@ -1,6 +1,7 @@
 
 import {Observable} from "rxjs/Observable";
 import {FieldDef} from "../datadictionnary/conf.interface";
+import {EdDaoFilterGroup} from "../store/filter.interface";
 
 export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIRessource {
   read(id?: string): Observable<EdDaoIObjectResource>;
@@ -30,7 +31,7 @@ export interface EdDaoICollectionRessource extends EdIReadable, EdIWritable, EdI
   setResources(resources: EdDaoIObjectResource[]);
   getResources(): EdDaoIObjectResource[];
 
-  readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource>;
+  readSome(filter: EdDaoFilterGroup, order?: any, pagination?: any): Observable<EdDaoICollectionRessource>;
   readNext(): Observable<EdDaoICollectionRessource>;
   setIDs(ids: string[]);
   getIDs(): string[];

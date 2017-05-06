@@ -10,27 +10,25 @@ import {EdDaoIStore} from "../store/store.interface";
 import {SystemError} from "../../../common/error/errors";
 import {FieldDef, FieldType} from "../datadictionnary/conf.interface";
 import {EdDaoStore} from "../store/store.impl";
+import {EdDaoFilterGroup} from "../store/filter.interface";
 
 export class EdDaoRessourceFactory {
 
   private static instance: EdDaoRessourceFactory = new EdDaoRessourceFactory();
-
-  private store: EdDaoIStore;
 
   public static getInstance (): EdDaoRessourceFactory {
     return this.instance;
   }
 
   constructor() {
-    this.store = EdDaoStore.getInstance();
   }
 
   public getResource(type: string): EdDaoIObjectResource {
-    return new EdDaoUnknownObjectResource(this.store, type);
+    return new EdDaoUnknownObjectResource(EdDaoStore.getInstance(), type);
   }
 
   public getCollectionRessource(type: string): EdDaoICollectionRessource {
-    return new EdDaoUnknownCollectionResource(this.store, type, null);
+    return new EdDaoUnknownCollectionResource(EdDaoStore.getInstance(), type, null);
   }
 
 }
@@ -190,11 +188,7 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
 
 
   read(): Observable<EdDaoICollectionRessource> {
-    const filter = {};
-    if (this.ownerObjectID && this.getMetaData().name) {
-      filter[this.getMetaData().name] = this.ownerObjectID;
-    }
-    return this.store.readCollection(this, filter, null, null);
+    return this.readSome(null);
   }
 
   isRead(): boolean {
@@ -252,8 +246,14 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
     return ids;
   }
 
-  readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource> {
-    throw new Error('Method not implemented.');
+  readSome(filter: EdDaoFilterGroup, order?: any, pagination?: any): Observable<EdDaoICollectionRessource> {
+    if (this.ownerObjectID && this.getMetaData().name) {
+      if(!filter) {
+        filter = {};
+      }
+      filter[this.getMetaData().name] = this.ownerObjectID;
+    }
+    return this.store.readCollection(this, filter, null, null);
   }
 
   readNext(): Observable<EdDaoICollectionRessource> {

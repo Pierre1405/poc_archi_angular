@@ -5,6 +5,8 @@ import {
 import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
 import {EdDaoICollectionRessource} from "./ressource/resource.interface";
 import {MockDataDictionnary} from "./mock.spec";
+import {Observable} from "rxjs/Observable";
+import {EdDaoFilterGroupOperator, EdDaoFilterItemsOperator} from "./store/filter.interface";
 
 
 describe("Test dao", function () {
@@ -24,7 +26,7 @@ describe("Test dao", function () {
     );
   });
 
-  it("should create object resource", function (done) {
+  it("should create and load object resource", function (done) {
     const resource = EdDaoRessourceFactory.getInstance().getResource("Person");
     resource.setProperty("PerName", "Pierre");
     expect(resource.isRead()).not.toBeTruthy();
@@ -46,7 +48,7 @@ describe("Test dao", function () {
       }
     );
   });
-  it("should create collection resource", function (done) {
+  it("should create and load collection resource", function (done) {
     const resource1 = EdDaoRessourceFactory.getInstance().getResource("Person");
     resource1.setProperty("PerName", "Test1");
     const resource2 = EdDaoRessourceFactory.getInstance().getResource("Person");
@@ -57,24 +59,29 @@ describe("Test dao", function () {
     expect(collectionRessourceCreation.isRead()).not.toBeTruthy("Collection shouldn't be read");
     expect(collectionRessourceCreation.getResources()[0].isRead()).not.toBeTruthy("Collection item 1 shouldn't be read");
     expect(collectionRessourceCreation.getResources()[1].isRead()).not.toBeTruthy("Collection item 2 shouldn't be read");
-    debugger;
+
     collectionRessourceCreation.write().subscribe(
       function (theJustSavedCollection) {
         const assertCollectionRessource = function (collection: EdDaoICollectionRessource) {
-          expect(collection.getResources()[0].getID()).toBeTruthy();
-          expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
-          expect(collection.getResources()[1].getID()).toBeTruthy();
-          expect(collection.getResources()[1].getProperty("PerName").getValue()).toBe("Test2");
-          expect(collection.isRead()).toBeTruthy("Collection should be read");
-          expect(collection.getResources()[0].isRead()).toBeTruthy("Collection item 1 should be read");
-          expect(collection.getResources()[1].isRead()).toBeTruthy("Collection item 2 should be read");
+          try {
+            expect(collection.getResources()[0].getID()).toBeTruthy();
+            expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
+            expect(collection.getResources()[1].getID()).toBeTruthy();
+            expect(collection.getResources()[1].getProperty("PerName").getValue()).toBe("Test2");
+            expect(collection.isRead()).toBeTruthy("Collection should be read");
+            expect(collection.getResources()[0].isRead()).toBeTruthy("Collection item 1 should be read");
+            expect(collection.getResources()[1].isRead()).toBeTruthy("Collection item 2 should be read");
+          } catch (e) {
+            fail(e);
+          }
         };
-
         assertCollectionRessource(collectionRessourceCreation);
         assertCollectionRessource(theJustSavedCollection);
         const collectionRessourceLoadAfterCreation = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
         collectionRessourceLoadAfterCreation.read().subscribe(
-          function() {
+          function(collectionRessourceLoadAfterCreationFromSubscriber) {
+            assertCollectionRessource(collectionRessourceLoadAfterCreation);
+            assertCollectionRessource(collectionRessourceLoadAfterCreationFromSubscriber);
             done();
           },
           function() {
@@ -88,18 +95,6 @@ describe("Test dao", function () {
     );
   });
 
-  it("should load object resource", function () {
-
-  });
-
-  it("should load collection resource", function () {
-
-  });
-
-  it("should load a filtered collection resource", function () {
-
-  });
-
   it("should update object resource", function () {
   });
 
@@ -109,18 +104,54 @@ describe("Test dao", function () {
     // check collection
   });
 
+  const prepareCollectionForFilterTest = function (handler) {
+    const resource1 = EdDaoRessourceFactory.getInstance().getResource("Person");
+    resource1.setProperty("PerName", "ShouldBeFound");
+    const resource2 = EdDaoRessourceFactory.getInstance().getResource("Person");
+    resource2.setProperty("PerName", "ShouldBeFound");
+    const resource3 = EdDaoRessourceFactory.getInstance().getResource("Person");
+    resource3.setProperty("PerName", "ShouldNotBeFound");
+
+    Observable.merge(resource1.write(), resource2.write(), resource3.write()).subscribe(
+      null,
+      () => {
+        fail("not able to prepare data for test")
+      },
+      handler
+    );
+  };
+
+  it("should load a filtered collection resource", function () {
+    prepareCollectionForFilterTest(
+      function() {
+        const collectionFromFactory = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
+        collectionFromFactory.readSome({
+          operator: EdDaoFilterGroupOperator.AND,
+          items: [{
+            operator: EdDaoFilterItemsOperator.EQUALS,
+            fieldName: "PerName",
+            value: "ShouldNotBeFound"
+          }]
+        });
+      });
+  });
+
+
+  it("should load a % filtered collection resource", function () {
+  });
+  it("should paginate collection resource", function () {
+  });
+  it("should order collection resource", function () {
+  });
+  it("should filtered, order and paginate collection resource", function () {
+  });
+
   it("should delete resource", function () {
 
   });
 
   it("should delete collection", function () {
 
-  });
-
-  it("should update id after creating resource", function () {
-    // check primitive
-    // check object
-    // check collection
   });
 
   it("should create an update object resource tree", function () {

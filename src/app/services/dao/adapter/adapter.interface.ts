@@ -1,5 +1,6 @@
 import {Observable} from "rxjs/Observable";
 import {ApplicationRawData, PersistanceRawData} from "../store/store.impl";
+import {EdDaoFilterGroup} from "../store/filter.interface";
 
 
 
@@ -8,7 +9,7 @@ export interface EdIAdapter {
                resourceName: string):
                       Observable<PersistanceRawData>;
   readCollection(resourceName: string,
-                 filter: any, order: any, pagination: any):
+                 filter: EdDaoFilterGroup, order: any, pagination: any):
     Observable<PersistanceRawData[]>;
 
   saveResources(resources: PersistanceRawData[]): Observable<PersistanceRawData[]>;

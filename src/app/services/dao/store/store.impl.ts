@@ -5,6 +5,7 @@ import {EdIAdapter} from "../adapter/adapter.interface";
 import {EdDaoIStore} from "./store.interface";
 import {EdDaoRessourceFactory} from "../ressource/resource.impl";
 import {FieldType} from "../datadictionnary/conf.interface";
+import {EdDaoFilterGroup} from "./filter.interface";
 
 export interface RawValues {
   [fieldName: string]: any;
@@ -53,7 +54,7 @@ export class EdDaoStore implements EdDaoIStore {
     }.bind(this));
 
   }
-  readCollection(collection: EdDaoICollectionRessource, filter: any, order: any, pagination: any):
+  readCollection(collection: EdDaoICollectionRessource, filter: EdDaoFilterGroup, order: any, pagination: any):
                       Observable<EdDaoICollectionRessource> {
     return Observable.create( function (observer) {
       // read resource from persistence adapter
@@ -61,8 +62,9 @@ export class EdDaoStore implements EdDaoIStore {
 
       // When it's done translate persistence data to populate application resource
       persistance$.subscribe(function (persistenceData) {
+        console.log("titi", persistenceData);
         this.populateObjectCollectionWithRawData(collection, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
-        observer.next();
+        observer.next(collection);
       }.bind(this), (error) => {
         observer.error(error);
       }, () => {

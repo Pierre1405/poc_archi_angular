@@ -1,23 +1,23 @@
 import {EdIAdapter} from "../adapter/adapter.interface";
 import {FieldAdapter} from "../store/store.interface";
 export interface DaoDef {
-  dico: DicoDef,
-  storeRegistry: StoreRegistryDef
+  dico: DicoDef;
+  storeRegistry: StoreRegistryDef;
 }
 
 export interface DicoDef {
-  [objectName: string]: ObjectDef
+  [objectName: string]: ObjectDef;
 }
 
 export interface StoreRegistryDef {
-  [objectName: string]: [StoreDef]
+  [objectName: string]: [StoreDef];
 }
 
 export interface StoreDef {
-  isDefault?: boolean,
-  name: String,
-  adapter: EdIAdapter,
-  fieldAdapter?: FieldAdapter
+  isDefault?: boolean;
+  name: String;
+  adapter: EdIAdapter;
+  fieldAdapter?: FieldAdapter;
 }
 
 export interface ObjectDef {

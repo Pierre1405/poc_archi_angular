@@ -6,6 +6,8 @@ import {DataDictionnary} from "../../datadictionnary/datadictionary.impl";
 import {SystemError} from "../../../../common/error/errors";
 import {Observable} from "rxjs";
 import {ApplicationRawData, PersistanceRawData} from "../../store/store.impl";
+import {EdDaoFilterGroup} from "app/services/dao/store/filter.interface";
+import {EdDaoFilterGroup} from "../../store/filter.interface";
 
 export class EdDaoIndexedDBAdapter implements EdIAdapter {
 
@@ -127,9 +129,12 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     }.bind(this));
   }
 
-  // TODO implement filter
+  cursorValueMatchFilter (value: any, filter: EdDaoFilterGroup) {
+
+  }
+
   readCollection(resourceName: string,
-                 filter: any, order: any, pagination: any): Observable<PersistanceRawData[]> {
+                 filter: EdDaoFilterGroup, order: any, pagination: any): Observable<PersistanceRawData[]> {
     return Observable.create(function (observer) {
       this.whenConnectionOpened(function (db) {
         const transaction = db.transaction(resourceName);
@@ -144,11 +149,13 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         idbRequest.onsuccess = function (ev) {
           const cursor: IDBCursor = ev.target["result"];
           if (cursor) {
-            const objectPersistanceData: PersistanceRawData = {
-              resourceName: resourceName,
-              data: cursor["value"]
-            };
-            result.push(objectPersistanceData);
+            if (this.matchFilter(cursor["value"], filter)) {
+              const objectPersistanceData: PersistanceRawData = {
+                resourceName: resourceName,
+                data: cursor["value"]
+              };
+              result.push(objectPersistanceData);
+            }
             cursor.continue();
           } else {
             const collectionPersitanceData: PersistanceRawData = {
