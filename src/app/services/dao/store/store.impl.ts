@@ -3,7 +3,10 @@ import {Observable} from "rxjs/Observable";
 import {EdDaoIndexedDBAdapter} from "../adapter/indexeddb/indexeddb.adapter";
 import {EdIAdapter} from "../adapter/adapter.interface";
 import {EdDaoIStore} from "./store.interface";
-import {EdDaoRessourceFactory} from "../ressource/resource.impl";
+import {
+  EdDaoRessourceFactory, EdDaoUnknownCollectionResource,
+  EdDaoUnknownObjectResource
+} from "../ressource/resource.impl";
 import {FieldType} from "../datadictionnary/conf.interface";
 
 export interface RawValues {
@@ -20,7 +23,7 @@ export interface PersistanceRawData {
 }
 
 // TODO Implement cache
-export class EdDaoStore implements EdDaoIStore {
+export class EdDaoStore implements EdDaoIStore<EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource> {
 
 
   private static instance: EdDaoStore;
@@ -53,8 +56,8 @@ export class EdDaoStore implements EdDaoIStore {
     }.bind(this));
 
   }
-  readCollection(collection: EdDaoICollectionRessource, filter: any, order: any, pagination: any):
-                      Observable<EdDaoICollectionRessource> {
+  readCollection(collection: EdDaoUnknownCollectionResource, filter: any, order: any, pagination: any):
+                      Observable<EdDaoUnknownCollectionResource> {
     return Observable.create( function (observer) {
       // read resource from persistence adapter
       const persistance$ = this.adapter.readCollection(collection.getMetaData().objectDef.name, filter, order, pagination);
@@ -70,8 +73,8 @@ export class EdDaoStore implements EdDaoIStore {
       });
     }.bind(this));
   }
-  saveResources(resources: (EdDaoIObjectResource|EdDaoICollectionRessource)[]):
-                      Observable<(EdDaoIObjectResource|EdDaoICollectionRessource)[]> {
+  saveResources(resources: (EdDaoIObjectResource|EdDaoICollectionRessource<EdDaoIObjectResource>)[]):
+                      Observable<(EdDaoIObjectResource|EdDaoICollectionRessource<EdDaoIObjectResource>)[]> {
     return Observable.create( function (observer) {
       const persistanceRawData: PersistanceRawData[] = [];
 
@@ -159,7 +162,7 @@ export class EdDaoStore implements EdDaoIStore {
     resource.setIsRead(true);
   }
 
-  populateObjectCollectionWithRawData(collection: EdDaoICollectionRessource, rawData: ApplicationRawData) {
+  populateObjectCollectionWithRawData(collection: EdDaoICollectionRessource<EdDaoIObjectResource>, rawData: ApplicationRawData) {
     const objectRawDatas: ApplicationRawData[] = <ApplicationRawData[]> rawData.data;
     const newCollectionResource: EdDaoIObjectResource[] = [];
     const resourceName: string = collection.getMetaData().objectDef.name;
@@ -172,7 +175,7 @@ export class EdDaoStore implements EdDaoIStore {
     collection.setIsRead(true);
   }
 
-  collectionResourcetoRawData(collection: EdDaoICollectionRessource): ApplicationRawData {
+  collectionResourcetoRawData(collection: EdDaoICollectionRessource<EdDaoIObjectResource>): ApplicationRawData {
     const result: ApplicationRawData = {
       resourceName: collection.getMetaData().objectDef.name,
         data: []

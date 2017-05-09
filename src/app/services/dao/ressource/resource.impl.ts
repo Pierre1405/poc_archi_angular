@@ -203,7 +203,7 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
     this._isRead = _isRead;
   }
 
-  write(): Observable<EdDaoICollectionRessource<EdDaoUnknownObjectResource>> {
+  write(): Observable<EdDaoUnknownCollectionResource> {
     return Observable.create(function (observer) {
       this.store.saveResources([this]).subscribe(function() {
         }.bind(this),

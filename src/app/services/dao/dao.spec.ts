@@ -1,4 +1,7 @@
-import {EdDaoRessourceFactory} from "./ressource/resource.impl";
+import {
+  EdDaoRessourceFactory, EdDaoUnknownCollectionResource,
+  EdDaoUnknownObjectResource
+} from "./ressource/resource.impl";
 import {
   DataDictionnary
 } from "./datadictionnary/datadictionary.impl";
@@ -47,9 +50,9 @@ describe("Test dao", function () {
     );
   });
   it("should create collection resource", function (done) {
-    const resource1 = EdDaoRessourceFactory.getInstance().getResource("Person");
+    const resource1 = <EdDaoUnknownObjectResource> EdDaoRessourceFactory.getInstance().getResource("Person");
     resource1.setProperty("PerName", "Test1");
-    const resource2 = EdDaoRessourceFactory.getInstance().getResource("Person");
+    const resource2 = <EdDaoUnknownObjectResource> EdDaoRessourceFactory.getInstance().getResource("Person");
     resource2.setProperty("PerName", "Test2");
     const collectionRessourceCreation = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
     collectionRessourceCreation.getResources().push(resource1);
@@ -60,7 +63,7 @@ describe("Test dao", function () {
     debugger;
     collectionRessourceCreation.write().subscribe(
       function (theJustSavedCollection) {
-        const assertCollectionRessource = function (collection: EdDaoICollectionRessource) {
+        const assertCollectionRessource = function (collection: EdDaoUnknownCollectionResource) {
           expect(collection.getResources()[0].getID()).toBeTruthy();
           expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
           expect(collection.getResources()[1].getID()).toBeTruthy();
