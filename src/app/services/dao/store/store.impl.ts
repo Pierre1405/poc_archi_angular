@@ -62,7 +62,6 @@ export class EdDaoStore implements EdDaoIStore {
 
       // When it's done translate persistence data to populate application resource
       persistance$.subscribe(function (persistenceData) {
-        console.log("titi", persistenceData);
         this.populateObjectCollectionWithRawData(collection, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
         observer.next(collection);
       }.bind(this), (error) => {
@@ -88,7 +87,8 @@ export class EdDaoStore implements EdDaoIStore {
         persistanceRawData.push(this.adapter.mapApplicationData2PersistanceData(rawData));
       }
 
-      this.adapter.saveResources(persistanceRawData).subscribe(
+      const saveObservable = this.adapter.saveResources(persistanceRawData);
+      saveObservable.subscribe(
         function() {
           try {
             for (let i = 0; i < persistanceRawData.length && i < resources.length; i++) {
@@ -108,10 +108,8 @@ export class EdDaoStore implements EdDaoIStore {
         }.bind(this),
         function(error) {
           observer.error(error);
-        },
-        function () {
+        }, () => {
           observer.complete();
-          console.log("complete", persistanceRawData);
         }
       );
     }.bind(this));

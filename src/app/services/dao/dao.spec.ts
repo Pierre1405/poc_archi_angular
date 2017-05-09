@@ -6,7 +6,8 @@ import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
 import {EdDaoICollectionRessource} from "./ressource/resource.interface";
 import {MockDataDictionnary} from "./mock.spec";
 import {Observable} from "rxjs/Observable";
-import {EdDaoFilterGroupOperator, EdDaoFilterItemsOperator} from "./store/filter.interface";
+import {EdDaoFilterGroupOperator, EdDaoFilterAssertionOperators} from "./store/filter.interface";
+import {EdDaoStore} from "app/services/dao/store/store.impl";
 
 
 describe("Test dao", function () {
@@ -111,28 +112,31 @@ describe("Test dao", function () {
     resource2.setProperty("PerName", "ShouldBeFound");
     const resource3 = EdDaoRessourceFactory.getInstance().getResource("Person");
     resource3.setProperty("PerName", "ShouldNotBeFound");
-
-    Observable.merge(resource1.write(), resource2.write(), resource3.write()).subscribe(
+    EdDaoStore.getInstance().saveResources([resource1, resource2, resource3]).subscribe(
       null,
       () => {
-        fail("not able to prepare data for test")
+        fail("not able to prepare data for test");
       },
       handler
     );
   };
 
-  it("should load a filtered collection resource", function () {
+  it("should load a filtered collection resource", function (done) {
     prepareCollectionForFilterTest(
       function() {
         const collectionFromFactory = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
         collectionFromFactory.readSome({
           operator: EdDaoFilterGroupOperator.AND,
-          items: [{
-            operator: EdDaoFilterItemsOperator.EQUALS,
+          assertions: [{
             fieldName: "PerName",
             value: "ShouldNotBeFound"
           }]
-        });
+        }).subscribe(function (collectionFromObserver) {
+          expect(collectionFromFactory.getResources().length).toBe(2);
+          expect(collectionFromObserver.getResources().length).toBe(2);
+          done();
+        },
+        fail);
       });
   });
 

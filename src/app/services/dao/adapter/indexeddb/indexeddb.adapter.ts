@@ -5,9 +5,12 @@ import {DataDictionnary} from "../../datadictionnary/datadictionary.impl";
 
 import {SystemError} from "../../../../common/error/errors";
 import {Observable} from "rxjs";
+
 import {ApplicationRawData, PersistanceRawData} from "../../store/store.impl";
-import {EdDaoFilterGroup} from "app/services/dao/store/filter.interface";
-import {EdDaoFilterGroup} from "../../store/filter.interface";
+import {
+  EdDaoFilterGroup, EdDaoFilterAssertion, EdDaoFilterAssertionOperators,
+  EdDaoFilterGroupOperator
+} from "../../store/filter.interface";
 
 export class EdDaoIndexedDBAdapter implements EdIAdapter {
 
@@ -129,8 +132,43 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
     }.bind(this));
   }
 
-  cursorValueMatchFilter (value: any, filter: EdDaoFilterGroup) {
-
+  cursorValueMatchFilter (value: any, filter: EdDaoFilterGroup): boolean {
+    if (!filter || !filter.assertions || !filter.assertions.length) {
+      return true;
+    }
+    let result = true;
+    for (const item of filter.assertions) {
+      if (item instanceof EdDaoFilterGroup) {
+        result = this.cursorValueMatchFilter(value, <EdDaoFilterGroup> item);
+      } else {
+        const assertion = <EdDaoFilterAssertion> item;
+        const testedValue = value[assertion.fieldName];
+        const comparaisonValue = assertion.value;
+        switch (assertion.operator) {
+          case EdDaoFilterAssertionOperators.GREATER_THAN:
+            result = testedValue > comparaisonValue;
+            break;
+          case EdDaoFilterAssertionOperators.LOWER_THAN:
+            result = testedValue < comparaisonValue;
+            break;
+          default:
+            result = testedValue == comparaisonValue;
+        }
+      }
+      switch (filter.operator) {
+        case EdDaoFilterGroupOperator.AND:
+          if (!result) {
+            return false;
+          }
+          break;
+        case EdDaoFilterGroupOperator.OR:
+          if (!result) {
+            return true;
+          }
+          break;
+      }
+    }
+    return result;
   }
 
   readCollection(resourceName: string,
@@ -149,7 +187,7 @@ export class EdDaoIndexedDBAdapter implements EdIAdapter {
         idbRequest.onsuccess = function (ev) {
           const cursor: IDBCursor = ev.target["result"];
           if (cursor) {
-            if (this.matchFilter(cursor["value"], filter)) {
+            if (this.cursorValueMatchFilter(cursor["value"], filter)) {
               const objectPersistanceData: PersistanceRawData = {
                 resourceName: resourceName,
                 data: cursor["value"]

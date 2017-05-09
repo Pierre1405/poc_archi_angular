@@ -10,7 +10,10 @@ import {EdDaoIStore} from "../store/store.interface";
 import {SystemError} from "../../../common/error/errors";
 import {FieldDef, FieldType} from "../datadictionnary/conf.interface";
 import {EdDaoStore} from "../store/store.impl";
-import {EdDaoFilterGroup} from "../store/filter.interface";
+import {
+  EdDaoFilterGroup, EdDaoFilterGroupOperator, EdDaoFilterAssertion,
+  EdDaoFilterAssertionOperators
+} from "../store/filter.interface";
 
 export class EdDaoRessourceFactory {
 
@@ -248,10 +251,18 @@ export class EdDaoUnknownCollectionResource implements EdDaoICollectionRessource
 
   readSome(filter: EdDaoFilterGroup, order?: any, pagination?: any): Observable<EdDaoICollectionRessource> {
     if (this.ownerObjectID && this.getMetaData().name) {
-      if(!filter) {
-        filter = {};
+      const ownerFilterItemGroup: EdDaoFilterGroup = {
+        operator: EdDaoFilterGroupOperator.AND,
+        assertions: [{
+          operator: EdDaoFilterAssertionOperators.EQUALS,
+          fieldName: this.getMetaData().name,
+          value: this.ownerObjectID
+        }]
+      };
+      if (filter) {
+        ownerFilterItemGroup.assertions.push(filter);
       }
-      filter[this.getMetaData().name] = this.ownerObjectID;
+      filter = ownerFilterItemGroup;
     }
     return this.store.readCollection(this, filter, null, null);
   }
