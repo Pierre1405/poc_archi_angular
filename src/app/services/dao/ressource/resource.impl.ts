@@ -1,19 +1,12 @@
-
-
 import {Observable} from "rxjs/Observable";
-import {
-  EdDaoICollectionRessource, EdDaoIObjectResource, EdIPrimitiveRessource
-} from "./resource.interface";
+import {EdDaoICollectionRessource, EdDaoIObjectResource, EdIPrimitiveRessource} from "./resource.interface";
 import {Injectable} from "@angular/core";
 import {DataDictionnary} from "../datadictionnary/datadictionary.impl";
 import {EdDaoIStore} from "../store/store.interface";
 import {SystemError} from "../../../common/error/errors";
 import {FieldDef, FieldType} from "../datadictionnary/conf.interface";
 import {EdDaoStore} from "../store/store.impl";
-import {
-  EdDaoFilterGroup, EdDaoFilterGroupOperator, EdDaoFilterAssertion,
-  EdDaoFilterAssertionOperators
-} from "../store/filter.interface";
+import {EdDaoFilterAssertionOperators, EdDaoFilterGroup, EdDaoFilterGroupOperator} from "../store/filter.interface";
 
 export class EdDaoRessourceFactory {
 
@@ -229,9 +222,10 @@ export class EdDaoUnknownCollectionResource<T extends EdDaoIObjectResource> impl
   setIDs(ids: string[]) {
     this.setResources([]);
     for (const id of ids) {
-      const newResource = new EdDaoUnknownObjectResource(this.store, this.getMetaData());
+      // TODO remove this horror and update factory to use generic!!
+      const newResource = <EdDaoIObjectResource> new EdDaoUnknownObjectResource(this.store, this.getMetaData());
       newResource.setID(id);
-      this.getResources().push(newResource);
+      this.getResources().push(<T> newResource);
     }
     if (this.isRead()) {
       this.setIsRead(false);
@@ -341,9 +335,11 @@ class EdDaoResourceUtils {
             result[fieldName] = property.getValue();
           } else {
             if (fieldDef.isMultival) {
-              result[fieldName] = EdDaoResourceUtils.getNonCircularCollectionForJson(<EdDaoUnknownCollectionResource<EdDaoUnknownObjectResource>> resource.getCollectionResource(fieldName));
+              result[fieldName] = EdDaoResourceUtils.getNonCircularCollectionForJson
+                  (<EdDaoUnknownCollectionResource<EdDaoUnknownObjectResource>> resource.getCollectionResource(fieldName));
             } else {
-              result[fieldName] = EdDaoResourceUtils.getNonCircularResourceForJson(resource.getResource(fieldName));
+              result[fieldName] = EdDaoResourceUtils.getNonCircularResourceForJson
+                  (resource.getResource(fieldName));
             }
           }
         }
@@ -352,7 +348,8 @@ class EdDaoResourceUtils {
     return result;
   }
 
-  private static getNonCircularCollectionForJson(collectionResource: EdDaoUnknownCollectionResource<EdDaoUnknownObjectResource>): Array<any> {
+  private static getNonCircularCollectionForJson
+                    (collectionResource: EdDaoUnknownCollectionResource<EdDaoUnknownObjectResource>): Array<any> {
     const result: Array<any> = [];
     for (const resource of collectionResource.getResources()) {
       result.push(EdDaoResourceUtils.getNonCircularResourceForJson(resource));

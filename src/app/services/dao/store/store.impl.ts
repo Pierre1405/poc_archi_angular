@@ -63,7 +63,7 @@ export class EdDaoStore implements EdDaoIStore {
       // When it's done translate persistence data to populate application resource
       persistance$.subscribe(function (persistenceData) {
         this.populateObjectCollectionWithRawData(resource, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
-        observer.next(collection);
+        observer.next(resource);
       }.bind(this), (error) => {
         observer.error(error);
       }, () => {

@@ -1,12 +1,10 @@
-import {
-  EdDaoRessourceFactory,
-  EdDaoUnknownCollectionResource,
-  EdDaoUnknownObjectResource
-} from "./ressource/resource.impl";
+import {EdDaoRessourceFactory} from "./ressource/resource.impl";
 import {DataDictionnary} from "./datadictionnary/datadictionary.impl";
 import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
-import {EdDaoIObjectResource} from "./ressource/resource.interface";
+import {EdDaoICollectionRessource, EdDaoIObjectResource} from "./ressource/resource.interface";
 import {MockDataDictionnary} from "./mock.spec";
+import {EdDaoStore} from "./store/store.impl";
+import {EdDaoFilterGroupOperator} from "app/services/dao/store/filter.interface";
 
 
 describe("Test dao", function () {
@@ -62,7 +60,7 @@ describe("Test dao", function () {
 
     collectionRessourceCreation.write().subscribe(
       function (theJustSavedCollection) {
-        const assertCollectionRessource = function (collection: EdDaoICollectionRessource) {
+        const assertCollectionRessource = function (collection: EdDaoICollectionRessource<EdDaoIObjectResource>) {
           try {
             expect(collection.getResources()[0].getID()).toBeTruthy();
             expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
@@ -120,6 +118,19 @@ describe("Test dao", function () {
     );
   };
 
+  it("should load a none filtered collection resource if filter is null", function (done) {
+    prepareCollectionForFilterTest(
+      function() {
+        const collectionFromFactory = EdDaoRessourceFactory.getInstance().getCollectionRessource("Person");
+        collectionFromFactory.readSome(null).subscribe(function (collectionFromObserver) {
+            expect(collectionFromFactory.getResources().length).toBe(3);
+            expect(collectionFromObserver.getResources().length).toBe(3);
+            done();
+          },
+          fail);
+      });
+  });
+
   it("should load a filtered collection resource", function (done) {
     prepareCollectionForFilterTest(
       function() {
@@ -128,14 +139,14 @@ describe("Test dao", function () {
           operator: EdDaoFilterGroupOperator.AND,
           assertions: [{
             fieldName: "PerName",
-            value: "ShouldNotBeFound"
+            value: "ShouldBeFound"
           }]
         }).subscribe(function (collectionFromObserver) {
-          expect(collectionFromFactory.getResources().length).toBe(2);
-          expect(collectionFromObserver.getResources().length).toBe(2);
-          done();
-        },
-        fail);
+            expect(collectionFromFactory.getResources().length).toBe(2);
+            expect(collectionFromObserver.getResources().length).toBe(2);
+            done();
+          },
+          fail);
       });
   });
 

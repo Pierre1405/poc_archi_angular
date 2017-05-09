@@ -6,7 +6,6 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./ed-column-container.component.css']
 })
 export class EdColumnContainerComponent implements OnInit {
-  private items: Array<String> = ["123", "456"];
   constructor() {
 
   }

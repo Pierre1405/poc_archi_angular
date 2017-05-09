@@ -1,8 +1,7 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { PersonEditComponent } from './person-edit.component';
+import {PersonEditComponent} from "./person-edit.component";
 import {EdCommonModule} from "../../../../common/ed.common.module";
-import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 
 describe('PersonEditComponent', () => {
@@ -14,7 +13,7 @@ describe('PersonEditComponent', () => {
       declarations: [
         PersonEditComponent,
       ],
-      imports:[
+      imports: [
         EdCommonModule,
         RouterTestingModule
       ]

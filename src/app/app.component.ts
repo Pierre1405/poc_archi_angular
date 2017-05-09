@@ -1,6 +1,4 @@
-import { Component } from '@angular/core';
-import {EdDaoStore} from "./services/dao/store/store.impl";
-import {EdDaoUnknownObjectResource} from "./services/dao/ressource/resource.impl";
+import {Component} from "@angular/core";
 
 @Component({
   selector: 'app-root',
