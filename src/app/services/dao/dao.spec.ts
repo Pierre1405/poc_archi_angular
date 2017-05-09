@@ -1,13 +1,12 @@
-import {EdDaoRessourceFactory} from "./ressource/resource.impl";
 import {
-  DataDictionnary
-} from "./datadictionnary/datadictionary.impl";
+  EdDaoRessourceFactory,
+  EdDaoUnknownCollectionResource,
+  EdDaoUnknownObjectResource
+} from "./ressource/resource.impl";
+import {DataDictionnary} from "./datadictionnary/datadictionary.impl";
 import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
-import {EdDaoICollectionRessource} from "./ressource/resource.interface";
+import {EdDaoIObjectResource} from "./ressource/resource.interface";
 import {MockDataDictionnary} from "./mock.spec";
-import {Observable} from "rxjs/Observable";
-import {EdDaoFilterGroupOperator, EdDaoFilterAssertionOperators} from "./store/filter.interface";
-import {EdDaoStore} from "app/services/dao/store/store.impl";
 
 
 describe("Test dao", function () {

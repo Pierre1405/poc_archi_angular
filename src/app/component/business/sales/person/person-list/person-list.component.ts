@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {
   EdDaoRessourceFactory,
-  EdDaoUnknownCollectionResource
+  EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource
 } from "../../../../../services/dao/ressource/resource.impl";
 
 
@@ -18,7 +18,7 @@ import {
 })
 export class PersonListComponent implements OnInit {
 
-  constructor(public persons: EdDaoUnknownCollectionResource) {
+  constructor(public persons: EdDaoUnknownCollectionResource<EdDaoUnknownObjectResource>) {
     console.log(persons);
     persons.read().subscribe(v => console.log(v));
   }

@@ -1,5 +1,6 @@
 import {EdIAdapter} from "../adapter/adapter.interface";
-import {FieldAdapter} from "../store/store.interface";
+import {ResourceAdapter} from "../store/store.interface";
+import {EdDaoIObjectResource} from "../ressource/resource.interface";
 export interface DaoDef {
   dico: DicoDef;
   storeRegistry: StoreRegistryDef;
@@ -17,7 +18,7 @@ export interface StoreDef {
   isDefault?: boolean;
   name: String;
   adapter: EdIAdapter;
-  fieldAdapter?: FieldAdapter;
+  fieldAdapter?: ResourceAdapter<EdDaoIObjectResource>;
 }
 
 export interface ObjectDef {
