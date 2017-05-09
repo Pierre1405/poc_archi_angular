@@ -15,23 +15,23 @@ export interface EdDaoIObjectResource extends EdIReadable, EdIWritable, EdIResso
   setResource(fieldName: string, resourceID: string): void;
   createResource(field: string, property: EdDaoIObjectResource);
 
-  getCollectionResource(field: string): EdDaoICollectionRessource;
-  createCollectionResource(field: string, property: EdDaoICollectionRessource);
+  getCollectionResource(field: string): EdDaoICollectionRessource<EdDaoIObjectResource>;
+  createCollectionResource(field: string, property: EdDaoICollectionRessource<EdDaoIObjectResource>);
 
   getID(): string;
   setID(id: string): void;
 }
 
-export interface EdDaoICollectionRessource extends EdIReadable, EdIWritable, EdIRessource {
-  read(): Observable<EdDaoICollectionRessource>;
-  write(): Observable<EdDaoICollectionRessource>;
+export interface EdDaoICollectionRessource<T extends EdDaoIObjectResource> extends EdIReadable, EdIWritable, EdIRessource {
+  read(): Observable<EdDaoICollectionRessource<T>>;
+  write(): Observable<EdDaoICollectionRessource<T>>;
   deleteThem(filter?: any): Observable<any>;
 
-  setResources(resources: EdDaoIObjectResource[]);
-  getResources(): EdDaoIObjectResource[];
+  setResources(resources: T[]);
+  getResources(): T[];
 
-  readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource>;
-  readNext(): Observable<EdDaoICollectionRessource>;
+  readSome(filter: any, pagination: any, order: any): Observable<EdDaoICollectionRessource<T>>;
+  readNext(): Observable<EdDaoICollectionRessource<T>>;
   setIDs(ids: string[]);
   getIDs(): string[];
 }
