@@ -1,12 +1,11 @@
 import {
-  EdDaoRessourceFactory, EdDaoUnknownCollectionResource,
+  EdDaoRessourceFactory,
+  EdDaoUnknownCollectionResource,
   EdDaoUnknownObjectResource
 } from "./ressource/resource.impl";
-import {
-  DataDictionnary
-} from "./datadictionnary/datadictionary.impl";
+import {DataDictionnary} from "./datadictionnary/datadictionary.impl";
 import {EdDaoIndexedDBAdapter} from "./adapter/indexeddb/indexeddb.adapter";
-import {EdDaoICollectionRessource} from "./ressource/resource.interface";
+import {EdDaoIObjectResource} from "./ressource/resource.interface";
 import {MockDataDictionnary} from "./mock.spec";
 
 
@@ -63,7 +62,7 @@ describe("Test dao", function () {
     debugger;
     collectionRessourceCreation.write().subscribe(
       function (theJustSavedCollection) {
-        const assertCollectionRessource = function (collection: EdDaoUnknownCollectionResource) {
+        const assertCollectionRessource = function (collection: EdDaoUnknownCollectionResource<EdDaoIObjectResource>) {
           expect(collection.getResources()[0].getID()).toBeTruthy();
           expect(collection.getResources()[0].getProperty("PerName").getValue()).toBe("Test1");
           expect(collection.getResources()[1].getID()).toBeTruthy();

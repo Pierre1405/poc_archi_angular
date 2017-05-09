@@ -1,12 +1,11 @@
 import {EdDaoICollectionRessource, EdDaoIObjectResource} from "../ressource/resource.interface";
 import {Observable} from "rxjs/Observable";
 
-export interface EdDaoIStore<C extends EdDaoICollectionRessource<O>, O extends EdDaoIObjectResource> {
+export interface EdDaoIStore {
   readResource(resource: EdDaoIObjectResource): Observable<EdDaoIObjectResource>;
-  readCollection(resource: C, filter: any, order: any, pagination: any): Observable<C>;
-  saveResources(resources: (O|C)[]):Observable<(O|C)[]>;
+  readCollection(resource: EdDaoICollectionRessource<EdDaoIObjectResource>, filter: any, order: any, pagination: any): Observable<EdDaoICollectionRessource<EdDaoIObjectResource>>;
+  saveResources(resources: (EdDaoIObjectResource|EdDaoICollectionRessource<EdDaoIObjectResource>)[]):Observable<(EdDaoIObjectResource|EdDaoICollectionRessource<EdDaoIObjectResource>)[]>;
 }
-
 
 export interface ResourceAdapter<T extends EdDaoIObjectResource> {
   persistanceToApplication (rawData: any): any;

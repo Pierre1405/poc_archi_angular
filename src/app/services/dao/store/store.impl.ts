@@ -3,10 +3,7 @@ import {Observable} from "rxjs/Observable";
 import {EdDaoIndexedDBAdapter} from "../adapter/indexeddb/indexeddb.adapter";
 import {EdIAdapter} from "../adapter/adapter.interface";
 import {EdDaoIStore} from "./store.interface";
-import {
-  EdDaoRessourceFactory, EdDaoUnknownCollectionResource,
-  EdDaoUnknownObjectResource
-} from "../ressource/resource.impl";
+import {EdDaoRessourceFactory} from "../ressource/resource.impl";
 import {FieldType} from "../datadictionnary/conf.interface";
 
 export interface RawValues {
@@ -23,7 +20,7 @@ export interface PersistanceRawData {
 }
 
 // TODO Implement cache
-export class EdDaoStore implements EdDaoIStore<EdDaoUnknownCollectionResource, EdDaoUnknownObjectResource> {
+export class EdDaoStore implements EdDaoIStore {
 
 
   private static instance: EdDaoStore;
@@ -56,15 +53,15 @@ export class EdDaoStore implements EdDaoIStore<EdDaoUnknownCollectionResource, E
     }.bind(this));
 
   }
-  readCollection(collection: EdDaoUnknownCollectionResource, filter: any, order: any, pagination: any):
-                      Observable<EdDaoUnknownCollectionResource> {
+  readCollection(resource: EdDaoICollectionRessource<EdDaoIObjectResource>, filter: any, order: any,
+                 pagination: any): Observable<EdDaoICollectionRessource<EdDaoIObjectResource>> {
     return Observable.create( function (observer) {
       // read resource from persistence adapter
-      const persistance$ = this.adapter.readCollection(collection.getMetaData().objectDef.name, filter, order, pagination);
+      const persistance$ = this.adapter.readCollection(resource.getMetaData().objectDef.name, filter, order, pagination);
 
       // When it's done translate persistence data to populate application resource
       persistance$.subscribe(function (persistenceData) {
-        this.populateObjectCollectionWithRawData(collection, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
+        this.populateObjectCollectionWithRawData(resource, this.adapter.mapPersistanceData2ApplicationData(persistenceData));
         observer.next();
       }.bind(this), (error) => {
         observer.error(error);
