@@ -38,6 +38,7 @@ export class PersonEditComponent implements OnInit {
 
   save() {
     console.log("save");
+
     /*
     this.person.getStore().saveResources([
       this.person.getResource("PerBestFriend"),
